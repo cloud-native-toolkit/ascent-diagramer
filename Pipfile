@@ -1,0 +1,16 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+livereload = "*"
+
+[packages]
+gunicorn = "==20.1.0"
+ibmcloudenv = "*"
+flask = ">=2.1.0"
+prometheus_client = "*"
+flasgger = "*"
+importlib_metadata = "*"
+importlib_resources = "*"
