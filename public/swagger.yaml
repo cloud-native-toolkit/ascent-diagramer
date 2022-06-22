@@ -1,13 +1,11 @@
-swagger: '2.0'
+swagger: "2.0"
 
 info:
   version: "0.0.1"
-  title: Python Flask REST API
-
-consumes:
-  - text/plain
+  title: Ascent Diagramer REST API
 
 produces:
+  - image/png
   - application/json
 
 paths:
@@ -19,13 +17,23 @@ paths:
         200:
           description: "Health check response"
           schema:
-            $ref: "#/definitions/healthResponse"
+            type: "object"
+            properties:
+              status:
+                type: "string"
           examples:
             application/json: { "status": "UP"}
-
-definitions:
-  healthResponse:
-    type: "object"
-    properties:
-      status:
-        type: "string"
+  /diagram:
+    get:
+      operationId: get
+      description: Get diagram from BOM definition
+      responses:
+        200:
+          description: "Diagram Image"
+          schema:
+            type: "file"
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary

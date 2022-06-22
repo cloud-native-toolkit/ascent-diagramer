@@ -7,6 +7,8 @@ COPY Pipfile* /opt/app-root/src/
 ## NOTE - rhel enforces user container permissions stronger ##
 USER root
 
+RUN yum -y install graphviz
+
 RUN pip3 install --upgrade pip==21.3.1 \
   && pip3 install --upgrade pipenv==2020.11.15 \
   && pipenv install --deploy
