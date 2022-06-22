@@ -12,6 +12,27 @@ from diagrams.aws.storage import S3
 from diagrams.gcp.analytics import BigQuery
 from diagrams.gcp.storage import GCS
 
+import yaml
+
+
+with open("./public/bom.yaml", "r") as stream:
+    try:
+        yamlFile = (yaml.safe_load(stream))
+    except yaml.YAMLError as exc:
+        print(exc)
+
+stream.close()
+
+print(yamlFile)
+
+if (yamlFile['kind'] == "BillOfMaterial") :
+    # do want to continue
+    print(yamlFile['kind'])
+if (yamlFile['metadata']['labels']['platform'] == "ibm"):
+    print(yamlFile['metadata']['labels']['platform'])
+    # some logic for using ibm icons
+# elif (yamlFile['metadata']['labels']['platform'] == 'azure'):
+#     # etc, use diff logic
 
 
 @app.route("/diagram")
@@ -30,22 +51,22 @@ def diagram():
                     
                     with Cluster("Zone 3 - 10.3.0.0/22"):
                         worker3 = ECS("Worker 3")
-                    
-                
             with Cluster("Cloud Services"):
                 handlers = [BigQuery("Monitoring"), 
                             GCS("Logging"), 
                             Redshift("Analytics")]
-            
-
             worker1 \
                 - Edge(color="red", style="dashed") \
                 - worker2 \
                 - Edge(color="red", style="dashed") \
                 - worker3 \
                 - Edge(color="blue", style="dashed") \
-                - handlers[1]
-        
-
+                - handlers[0]
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
+
+
+# note: easy enough to parse a python file, just need to figure
+# out the guidelines for how we want the icons to look, then we
+# can put in logic for matching the specs in the yaml file and
+# dynamically create a diagram based on what we see in there
