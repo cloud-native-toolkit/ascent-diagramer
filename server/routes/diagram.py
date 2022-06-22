@@ -9,30 +9,35 @@ from diagrams.aws.database import Redshift
 from diagrams.aws.integration import SQS
 from diagrams.aws.storage import S3
 
+from diagrams.gcp.analytics import BigQuery
+from diagrams.gcp.storage import GCS
+
+
+
 @app.route("/diagram")
 def diagram():
     """diagram route"""
 
-    with Diagram("Event Processing", show=False, filename='/tmp/diagram'):
-        source = EKS("k8s source")
+    with Diagram("IBM Cloud", show=False, filename='/tmp/diagram'):
 
-        with Cluster("Event Flows"):
-            with Cluster("Event Workers"):
-                workers = [ECS("worker1"),
-                        ECS("worker2"),
-                        ECS("worker3")]
+        with Cluster("quick start (VPC)"):
+            with Cluster("ACL: worker"):
+                with Cluster("Zone 1 - 10.1.0.0/22"):
+                    worker1 = ECS("Worker 1")
+                
+                with Cluster("Zone 2 - 10.2.0.0/22"):
+                    worker2 = ECS("Worker 2")
+                
+                with Cluster("Zone 3 - 10.3.0.0/22"):
+                    worker3 = ECS("Worker 3")
+                
+            
 
-            queue = SQS("event queue")
+        with Cluster("Cloud Services"):
+            handlers = [BigQuery("Monitoring"), 
+                        GCS("Logging"), 
+                        Redshift("Analytics")]
 
-            with Cluster("Processing"):
-                handlers = [Lambda("proc1"),
-                            Lambda("proc2")]
-
-        store = S3("events store")
-        dw = Redshift("analytics")
-
-        source >> workers >> queue >> handlers
-        handlers >> store
-        handlers >> dw
+        worker1 >> worker2 >> worker3
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
