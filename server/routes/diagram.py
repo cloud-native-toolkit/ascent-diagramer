@@ -51,10 +51,14 @@ def diagram():
                     
                     with Cluster("Zone 3 - 10.3.0.0/22"):
                         worker3 = ECS("Worker 3")
+
             with Cluster("Cloud Services"):
                 handlers = [BigQuery("Monitoring"), 
                             GCS("Logging"), 
                             Redshift("Analytics")]
+                # monitoring = BigQuery("Monitoring")
+                # logging = GCS("Logging")
+                # analytics = Redshift("Analytics")
             worker1 \
                 - Edge(color="red", style="dashed") \
                 - worker2 \
@@ -66,7 +70,7 @@ def diagram():
     return send_file('/tmp/diagram.png', mimetype='image/png')
 
 
-# note: easy enough to parse a python file, just need to figure
+# note: easy enough to parse a yaml file, just need to figure
 # out the guidelines for how we want the icons to look, then we
 # can put in logic for matching the specs in the yaml file and
 # dynamically create a diagram based on what we see in there
