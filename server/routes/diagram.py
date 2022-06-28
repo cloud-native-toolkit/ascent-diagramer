@@ -1,6 +1,7 @@
 
 from crypt import methods
 from doctest import master
+from hashlib import new
 from itertools import count
 from re import I
 from flask import send_file
@@ -63,34 +64,13 @@ def diagram():
                             clusters[s].append(name)
                         else:
                             clusters[s] = [name]
+
         # create new cluster for each key
         for clust in clusters.keys():
             makeClusters(clusters, clust)
-        
-        # with Cluster("quick start (VPC)"):
-        #     with Cluster("ACL: worker"):
-        #         with Cluster("Zone 1 - 10.1.0.0/22"):
-        #             worker1 = ECS("Worker 1")
-                
-        #         with Cluster("Zone 2 - 10.2.0.0/22"):
-        #             worker2 = ECS("Worker 2")
-                
-        #         with Cluster("Zone 3 - 10.3.0.0/22"):
-        #             worker3 = ECS("Worker 3")
-
-        # with Cluster("Cloud Services"):
-        #     handlers = [BigQuery("Monitoring"), 
-        #                 GCS("Logging"), 
-        #                 Redshift("Analytics")]
-        # worker1 \
-        #     - Edge(color="red", style="dashed") \
-        #     - worker2 \
-        #     - Edge(color="red", style="dashed") \
-        #     - worker3 \
-        #     - Edge(color="blue", style="dashed") \
-        #     - handlers[0]
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
+
 
 def makeClusters(clusters, clust):
     with Cluster(clust):
@@ -105,4 +85,35 @@ def makeClusters(clusters, clust):
             else:
                 newnode = GCS(node)
                 nodes.append(newnode)
-    return nodes
+        for i in range(0,len(nodes) - 1):
+            nodes[i] - Edge(color="blue") - nodes[i + 1]
+    return 1
+
+
+
+
+
+# hard code from before for reference:
+
+# with Cluster("quick start (VPC)"):
+    #     with Cluster("ACL: worker"):
+    #         with Cluster("Zone 1 - 10.1.0.0/22"):
+    #             worker1 = ECS("Worker 1")
+            
+    #         with Cluster("Zone 2 - 10.2.0.0/22"):
+    #             worker2 = ECS("Worker 2")
+            
+    #         with Cluster("Zone 3 - 10.3.0.0/22"):
+    #             worker3 = ECS("Worker 3")
+
+    # with Cluster("Cloud Services"):
+    #     handlers = [BigQuery("Monitoring"), 
+    #                 GCS("Logging"), 
+    #                 Redshift("Analytics")]
+    # worker1 \
+    #     - Edge(color="red", style="dashed") \
+    #     - worker2 \
+    #     - Edge(color="red", style="dashed") \
+    #     - worker3 \
+    #     - Edge(color="blue", style="dashed") \
+    #     - handlers[0]
