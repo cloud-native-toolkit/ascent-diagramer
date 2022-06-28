@@ -1,5 +1,8 @@
 
 from crypt import methods
+from doctest import master
+from itertools import count
+from re import I
 from flask import send_file
 from server import app
 
@@ -12,65 +15,94 @@ from diagrams.aws.storage import S3
 from diagrams.gcp.analytics import BigQuery
 from diagrams.gcp.storage import GCS
 
-import yaml
+
+import json
 
 
-with open("./public/bom.yaml", "r") as stream:
-    try:
-        yamlFile = (yaml.safe_load(stream))
-    except yaml.YAMLError as exc:
-        print(exc)
+with open("./public/ibm-standard.json", "r") as stream:
+    file = (json.load(stream))
 
 stream.close()
 
-print(yamlFile)
-
-if (yamlFile['kind'] == "BillOfMaterial") :
-    # do want to continue
-    print(yamlFile['kind'])
-if (yamlFile['metadata']['labels']['platform'] == "ibm"):
-    print(yamlFile['metadata']['labels']['platform'])
+if (file["bom"]["metadata"]["labels"]["platform"] == "ibm"):
+    print(file["bom"]["metadata"]["labels"]["platform"])
     # some logic for using ibm icons
-# elif (yamlFile['metadata']['labels']['platform'] == 'azure'):
-#     # etc, use diff logic
 
 
 @app.route("/diagram")
 def diagram():
     """diagram route"""
-
+    
     with Diagram( show=False, filename='/tmp/diagram'):
-        with Cluster("IBM Cloud"):
-            with Cluster("quick start (VPC)"):
-                with Cluster("ACL: worker"):
-                    with Cluster("Zone 1 - 10.1.0.0/22"):
-                        worker1 = ECS("Worker 1")
-                    
-                    with Cluster("Zone 2 - 10.2.0.0/22"):
-                        worker2 = ECS("Worker 2")
-                    
-                    with Cluster("Zone 3 - 10.3.0.0/22"):
-                        worker3 = ECS("Worker 3")
+        # have a dict of dependencies, key is the name and val is the list of nodes
+        clusters = {}
+        # iterate through modules
+        for i in file["bom"]["spec"]["modules"]:
+            d = True
+            # go through each item in the module
+            for key, val in i.items():
+                # for each module, get the name and dependencies
+                if key == "name":
+                    name = val
+                if key == "alias":
+                    name = val
+                if key == "dependencies":
+                    d = False
+                    # loop through each dependency
+                    for i in val:
+                        s = str(val[0]["ref"])
+                        if s in clusters.keys():
+                            clusters[s].append(name)
+                        else:
+                            clusters[s] = [name]
+                if d and key == "enrichedMetadata":
+                    # loop through each dependency
+                    for i in val["dependencies"]:
+                        s = str(i["id"])
+                        if s in clusters.keys():
+                            clusters[s].append(name)
+                        else:
+                            clusters[s] = [name]
+        # create new cluster for each key
+        for clust in clusters.keys():
+            makeClusters(clusters, clust)
+        
+        # with Cluster("quick start (VPC)"):
+        #     with Cluster("ACL: worker"):
+        #         with Cluster("Zone 1 - 10.1.0.0/22"):
+        #             worker1 = ECS("Worker 1")
+                
+        #         with Cluster("Zone 2 - 10.2.0.0/22"):
+        #             worker2 = ECS("Worker 2")
+                
+        #         with Cluster("Zone 3 - 10.3.0.0/22"):
+        #             worker3 = ECS("Worker 3")
 
-            with Cluster("Cloud Services"):
-                handlers = [BigQuery("Monitoring"), 
-                            GCS("Logging"), 
-                            Redshift("Analytics")]
-                # monitoring = BigQuery("Monitoring")
-                # logging = GCS("Logging")
-                # analytics = Redshift("Analytics")
-            worker1 \
-                - Edge(color="red", style="dashed") \
-                - worker2 \
-                - Edge(color="red", style="dashed") \
-                - worker3 \
-                - Edge(color="blue", style="dashed") \
-                - handlers[0]
+        # with Cluster("Cloud Services"):
+        #     handlers = [BigQuery("Monitoring"), 
+        #                 GCS("Logging"), 
+        #                 Redshift("Analytics")]
+        # worker1 \
+        #     - Edge(color="red", style="dashed") \
+        #     - worker2 \
+        #     - Edge(color="red", style="dashed") \
+        #     - worker3 \
+        #     - Edge(color="blue", style="dashed") \
+        #     - handlers[0]
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
 
-
-# note: easy enough to parse a yaml file, just need to figure
-# out the guidelines for how we want the icons to look, then we
-# can put in logic for matching the specs in the yaml file and
-# dynamically create a diagram based on what we see in there
+def makeClusters(clusters, clust):
+    with Cluster(clust):
+        # include each node that belongs in the cluster
+        nodes = []
+        for node in clusters[clust]:
+            # if there are nested clusters, find those first
+            if (node in clusters.keys()):
+                # want to go to that cluster and get its nodes first
+                makeClusters(clusters, node)
+                clusters[node] = []
+            else:
+                newnode = GCS(node)
+                nodes.append(newnode)
+    return nodes
