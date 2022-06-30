@@ -1,0 +1,37 @@
+apiVersion: cloud.ibm.com/v1alpha1
+kind: BillOfMaterial
+metadata:
+  name: 105-ibm-vpc-openshift
+  labels:
+    type: infrastructure
+    platform: ibm
+    code: '105'
+  annotations:
+    displayName: IBM VPC OpenShift
+    description: IBM VPC and public Red Hat OpenShift server
+spec:
+  modules:
+    - name: ibm-resource-group # ignore
+    - name: ibm-access-group # ignore
+    - name: ibm-vpc # cluster
+    - name: ibm-vpc-gateways # ignore
+    - name: ibm-vpc-subnets # zone clusters (# deplending on _count variable)
+      default: true
+      alias: cluster_subnets
+    - name: ibm-ocp-vpc # worker nodes (# deplending on worker_count variable)
+      variables:
+        - name: flavor
+          value: bx2.16x64
+        - name: worker_count
+          value: 1
+        - name: name_prefix
+          important: true
+        - name: name
+          important: true
+    - name: ibm-log-analysis # platform service in 'Cloud Service' cluster
+    - name: ibm-cloud-monitoring # platform service in 'Cloud Service' cluster
+    - name: ibm-log-analysis-bind # ignore
+    - name: ibm-cloud-monitoring-bind # ignore
+    - name: ibm-activity-tracker # platform service in 'Cloud Service' cluster
+  variables:
+    - name: name_prefix
