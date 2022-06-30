@@ -22,9 +22,9 @@ import json
 
 
 
-
-
-with open("./public/ibm-standard.json", "r") as stream:
+# change type of diagram here
+type = "ibm-standard"
+with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
 
@@ -37,7 +37,7 @@ def diagram():
     """diagram route"""
     
     with Diagram( show=False, filename='/tmp/diagram'):
-        with Cluster(file["bom"]["metadata"]["labels"]["platform"]):
+        with Cluster(file["bom"]["metadata"]["labels"]["platform"] + " - " + type):
             # have a dict of dependencies, key is the name and val is the list of nodes
             clusters = {"ibm-vpc-subnets": [3, [0]], "ibm-ocp-vpc": [0, [0]], 
                         "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]]} # last two are for standard
