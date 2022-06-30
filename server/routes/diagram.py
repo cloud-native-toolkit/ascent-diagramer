@@ -10,6 +10,7 @@ from flask import send_file
 from server import app
 
 from diagrams import Cluster, Diagram, Edge
+
 from diagrams.aws.compute import ECS, EKS, Lambda
 from diagrams.aws.database import Redshift
 from diagrams.aws.integration import SQS
@@ -17,6 +18,11 @@ from diagrams.aws.storage import S3
 
 from diagrams.gcp.analytics import BigQuery
 from diagrams.gcp.storage import GCS
+
+from diagrams.ibm.general import Monitoring, MonitoringLogging
+from diagrams.ibm.storage import ObjectStorage
+from diagrams.ibm.infrastructure import Diagnostics
+from diagrams.ibm.network import InternetServices, VpnConnection
 
 import json
 
@@ -28,9 +34,13 @@ with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
 
+# ibm specific node icons
 ignored = ["ibm-resource-group", "ibm-access-group", "ibm-vpc-gateways", "ibm-log-analysis-bind", "ibm-cloud-monitoring-bind", "kms-key"]
-platservice = ["ibm-log-analysis", "ibm-cloud-monitoring", "ibm-activity-tracker", "ibm-object-storage", "cos"]  # list of cloud services
+platservice = {"ibm-log-analysis": MonitoringLogging, "ibm-cloud-monitoring": Monitoring, "ibm-activity-tracker":Diagnostics, 
+                "ibm-object-storage":ObjectStorage, "cos":ObjectStorage}  # dict of cloud services
 
+workernode = InternetServices
+vpenode = VpnConnection
 
 @app.route("/diagram")
 def diagram():
@@ -56,7 +66,7 @@ def diagram():
                     if key == "alias" and "-subnets" in val:
                         name = val
                     
-                    if name in platservice:
+                    if name in platservice.keys():
                         # new node in cloud service cluster
                         services.append(name)
                         break
@@ -96,7 +106,7 @@ def diagram():
                                 s = str(depend["id"])
                                 if s in ignored:
                                     break
-                                if s in platservice and "ibm-object-storage" not in services:
+                                if s in platservice.keys() and "ibm-object-storage" not in services:
                                     services.append(s)
                                     continue
                                 # if s in clusters.keys():
@@ -108,7 +118,7 @@ def diagram():
             nodes = {}
             with Cluster("Cloud Services"):
                 for serv in services:
-                    n = GCS(serv)
+                    n = platservice[serv](serv)
                     nodes.update({serv: n})
             
             with Cluster("VPC"):
@@ -117,14 +127,14 @@ def diagram():
                         with Cluster("Zone " + str(net)):
                             for worker in range(0, clusters["ibm-ocp-vpc"][0]):
                                 s = str(clusters["worker-subnets"][1][worker]) + " - worker"+str(net)
-                                n = ECS(s)
+                                n = workernode(s)
                                 nodes.update({"worker"+str(net): n})
                             
                     for net in range(1, clusters["vpe-subnets"][0] + 1):
                         with Cluster("Zone " + str(net)):
                             for worker in range(0, clusters["ibm-ocp-vpc"][0]):
                                 s = str(clusters["vpe-subnets"][1][worker]) + " - vpe"+str(net)
-                                n = ECS(s)
+                                n = vpenode(s)
                                 nodes.update({"vpe"+str(net): n})
                     nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] \
                         - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
@@ -134,7 +144,7 @@ def diagram():
                         with Cluster("Zone " + str(net)):
                             for worker in range(0, clusters["ibm-ocp-vpc"][0]):
                                 s = str(clusters["ibm-ocp-vpc"][1][worker]) + " - worker"+str(net)
-                                n = ECS(s)
+                                n = workernode(s)
                                 nodes.update({"worker"+str(net): n})
                     nodes["worker3"] - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
  
