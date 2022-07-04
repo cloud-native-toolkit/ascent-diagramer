@@ -2,7 +2,7 @@ import os, sys, argparse, subprocess, signal
 
 # Tip from:
 # https://github.com/dpgaspar/Flask-AppBuilder/issues/733#issuecomment-379009480
-PORT = int(os.environ.get("PORT", 3000))
+PORT = int(os.environ.get("PORT", 3002))
 
 # Project defaults
 FLASK_APP = 'server/__init__.py'
@@ -102,11 +102,11 @@ parser = argparse.ArgumentParser(description=cm.availableCommands(),
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument("subcommand", help="subcommand to run (see list above)")
 parser.add_argument("ipaddress", nargs='?', default=DEFAULT_IP,
-                    help="address and port to run on (i.e. 0.0.0.0:3000)")
+                    help="address and port to run on (i.e. 0.0.0.0:3002)")
 
 
 def livereload_check():
-    check = subprocess.call("lsof -n -i4TCP:3000", shell=True)
+    check = subprocess.call("lsof -n -i4TCP:3002", shell=True)
     if (check == 0):
         output = subprocess.check_output("pgrep Python", shell=True)
         pypid = int(output)
