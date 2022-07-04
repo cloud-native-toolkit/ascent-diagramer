@@ -19,8 +19,8 @@ USER 1001
 
 COPY . /opt/app-root/src
 ENV FLASK_APP=server/__init__.py
-ENV PORT 3000
+ENV PORT 3002
 
-EXPOSE 3000
+EXPOSE 3002
 
 CMD ["python3", "manage.py", "start"]

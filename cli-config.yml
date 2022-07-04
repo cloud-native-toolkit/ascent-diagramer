@@ -14,7 +14,7 @@ container-path-run : "/opt/app-root/src"
 container-path-tools : "/opt/app-root/src"
 
 # The port mappings between the host and the container in the form [host:container]
-container-port-map : "3000:3000"
+container-port-map : "3002:3002"
 # The port mappings between the host and the container for the debug port in the form [host:container]
 container-port-map-debug : "5858:5858"
 
