@@ -1,4 +1,3 @@
-
 from crypt import methods
 from curses.ascii import ETB
 from doctest import master
@@ -16,9 +15,6 @@ from diagrams.aws.database import Redshift
 from diagrams.aws.integration import SQS
 from diagrams.aws.storage import S3
 
-from diagrams.gcp.analytics import BigQuery
-from diagrams.gcp.storage import GCS
-
 from diagrams.ibm.general import Monitoring, MonitoringLogging, Cloudant, IotCloud
 from diagrams.ibm.data import Cloud
 from diagrams.ibm.storage import ObjectStorage
@@ -34,9 +30,8 @@ from diagrams.ibm.applications import EnterpriseApplications
 import json
 
 
-
 # change type of diagram here
-type = "ibm-standard"
+type = "ibm-development"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
@@ -48,16 +43,17 @@ platservice = {"ibm-log-analysis": MonitoringLogging, "ibm-cloud-monitoring": Mo
 
 workernode = Key  # Cloud, Router
 vpenode = VpnConnection
+ingressnode = Browser
 
 @app.route("/diagram")
 def diagram():
     """diagram route"""
     
     with Diagram( show=False, filename='/tmp/diagram'):
-        with Cluster(file["bom"]["metadata"]["labels"]["platform"] + " - " + type):
+        with Cluster(file["bom"]["metadata"]["labels"]["platform"] + " Cloud"):
             # have a dict of dependencies, key is the name and val is the list of nodes
             clusters = {"ibm-vpc-subnets": [3, [0]], "ibm-ocp-vpc": [0, [0]], 
-                        "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]]} # last two are for standard
+                        "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]], "ingress-subnets": [0, [0]]} 
             services = []
             # iterate through modules
             for i in file["bom"]["spec"]["modules"]:
@@ -79,12 +75,14 @@ def diagram():
                         break
 
                     if name in clusters.keys() and key == "variables":
-                        v = False
+                        
                         # for each variable:
                         for var in val:
-                            if var["name"] == "worker_count" or var["name"] == "_count":
+                            if (var["name"] == "worker_count" or var["name"] == "_count") and "value" in var:
+                                v = False
                                 clusters[name][0] = var["value"]
                             if var["name"] == "ipv4_cidr_blocks":
+                                v = False
                                 clusters[name][1] = var["value"]
 
                     # if key == "dependencies":
@@ -128,7 +126,7 @@ def diagram():
                     n = platservice[serv](serv)
                     nodes.update({serv: n})
             
-            with Cluster("VPC"):
+            with Cluster(type + " (VPC)"):
                 if clusters["worker-subnets"][0] > 0:
                     for net in range(1, clusters["worker-subnets"][0] + 1):
                         with Cluster("Zone " + str(net)):
@@ -143,6 +141,17 @@ def diagram():
                                 s = str(clusters["vpe-subnets"][1][worker]) + " - vpe"+str(net)
                                 n = vpenode(s)
                                 nodes.update({"vpe"+str(net): n})
+                    
+                    if clusters["ingress-subnets"][0] > 0:
+                        for net in range(1, clusters["ingress-subnets"][0] + 1):
+                            with Cluster("Zone " + str(net)):
+                                for worker in range(0, clusters["ibm-ocp-vpc"][0]):
+                                    s = str(clusters["ingress-subnets"][1][worker]) + " - ingress"+str(net)
+                                    n = ingressnode(s)
+                                    nodes.update({"ingress"+str(net): n})
+                                
+                    print(nodes)
+                    
                     nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] \
                         - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
 
@@ -160,7 +169,7 @@ def diagram():
             nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"]
 
             
-        if type == "ibm-standard":
+        if type == "ibm-standard" or type == 'ibm-production':
             with Cluster("Remote Employee"):
                 User("Remote employee") >> Cloudant() >> nodes["vpe1"]
             with Cluster("Consumer"):

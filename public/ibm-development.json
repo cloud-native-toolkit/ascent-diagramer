@@ -1,0 +1,3274 @@
+{
+    "bom": {
+        "apiVersion": "cloud.ibm.com/v1alpha1",
+        "kind": "BillOfMaterial",
+        "metadata": {
+            "name": "130-ibm-development-vpc-openshift",
+            "labels": {
+                "type": "infrastructure",
+                "platform": "ibm",
+                "code": "130"
+            },
+            "annotations": {
+                "displayName": "IBM Development VPC OpenShift",
+                "description": "IBM VPC and Red Hat OpenShift server for development environment"
+            }
+        },
+        "spec": {
+            "modules": [
+                {
+                    "name": "ibm-resource-group",
+                    "alias": "kms_resource_group",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "manualResolution": true,
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api key",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group",
+                                "alias": "name",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order the provisioning of the resource group",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v3.2.16",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the resource group"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the resource group"
+                            },
+                            {
+                                "name": "group",
+                                "description": "The resource group object"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to order the provisioning of the resource group"
+                            },
+                            {
+                                "name": "provision",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            },
+                            {
+                                "name": "tags",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-kms",
+                    "alias": "kms",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": false
+                        },
+                        {
+                            "name": "region",
+                            "alias": "kms_region"
+                        },
+                        {
+                            "name": "name_prefix",
+                            "alias": "kms_name_prefix",
+                            "scope": "global",
+                            "value": ""
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "resource_group",
+                            "ref": "kms_resource_group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Resource group where the cluster has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "Tags that should be applied to the service",
+                                "default": []
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that key-protect instance should be provisioned",
+                                "default": true
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": ""
+                            },
+                            {
+                                "name": "private_endpoint",
+                                "type": "string",
+                                "description": "Flag indicating that the service should be created with private endpoints",
+                                "default": "true",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "number_of_crypto_units",
+                                "type": "number",
+                                "description": "No of crypto units that has to be attached to the instance.",
+                                "default": "2"
+                            },
+                            {
+                                "name": "service",
+                                "type": "string",
+                                "description": "The name of the KMS provider that should be used (keyprotect or hpcs)",
+                                "default": "keyprotect"
+                            }
+                        ],
+                        "version": "v0.3.4",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "guid",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "name",
+                                "description": "The name of the provisioned instance."
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The id of the provisioned instance"
+                            },
+                            {
+                                "name": "location",
+                                "description": "The location of the provisioned instance"
+                            },
+                            {
+                                "name": "service",
+                                "description": "The service name of the key provisioned for the instance"
+                            },
+                            {
+                                "name": "label",
+                                "description": "The label for the instance"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of the resource"
+                            },
+                            {
+                                "name": "public_url",
+                                "description": "The public endpoint for the resource"
+                            },
+                            {
+                                "name": "private_url",
+                                "description": "The private endpoint for the resource"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-resource-group",
+                    "alias": "dev_resource_group",
+                    "default": true,
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "manualResolution": true,
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api key",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group",
+                                "alias": "name",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order the provisioning of the resource group",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v3.2.16",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the resource group"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the resource group"
+                            },
+                            {
+                                "name": "group",
+                                "description": "The resource group object"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to order the provisioning of the resource group"
+                            },
+                            {
+                                "name": "provision",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            },
+                            {
+                                "name": "tags",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-access-group",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.3.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group for which the access groups will be created",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The api key used to access IBM Cloud",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "page_limit",
+                                "type": "number",
+                                "description": "The number of access groups to return per request (this is mostly used for testing)",
+                                "default": "50",
+                                "scope": "ignore"
+                            }
+                        ],
+                        "version": "v3.1.6",
+                        "outputs": [
+                            {
+                                "name": "resource_group_name",
+                                "description": "The resource group name"
+                            },
+                            {
+                                "name": "admin_group_name",
+                                "description": "List of admin access group names"
+                            },
+                            {
+                                "name": "edit_group_name",
+                                "description": "List of editor access group names"
+                            },
+                            {
+                                "name": "view_group_name",
+                                "description": "List of viewer access group names"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc",
+                    "variables": [
+                        {
+                            "name": "address_prefix_count",
+                            "value": 3
+                        },
+                        {
+                            "name": "address_prefixes",
+                            "value": [
+                                "10.10.0.0/18",
+                                "10.20.0.0/18",
+                                "10.30.0.0/18"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC instance will be created.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "default": "",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The name of the vpc resource",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the instance should be provisioned. If false then an existing instance will be looked up",
+                                "default": true
+                            },
+                            {
+                                "name": "address_prefix_count",
+                                "type": "number",
+                                "description": "The number of ipv4_cidr_blocks",
+                                "default": "0"
+                            },
+                            {
+                                "name": "address_prefixes",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the address prefixes (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "base_security_group_name",
+                                "type": "string",
+                                "description": "The name of the base security group. If not provided the name will be based on the vpc name",
+                                "default": ""
+                            },
+                            {
+                                "name": "internal_cidr",
+                                "type": "string",
+                                "description": "The cidr range of the internal network",
+                                "default": "10.0.0.0/8"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            }
+                        ],
+                        "version": "v1.16.0",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the vpc instance"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the vpc instance"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network acl"
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The CRN for the vpc instance"
+                            },
+                            {
+                                "name": "count",
+                                "description": "The number of VPCs created by this module. Always set to 1"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The name of the vpc instance"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The id of the vpc instance"
+                            },
+                            {
+                                "name": "base_security_group",
+                                "description": "The id of the base security group to be shared by other resources. The base group is different from the default security group."
+                            },
+                            {
+                                "name": "addresses",
+                                "description": "The ip address ranges for the VPC"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-flow-logs",
+                    "dependencies": [
+                        {
+                            "name": "target",
+                            "ref": "ibm-vpc"
+                        },
+                        {
+                            "name": "cos_bucket",
+                            "ref": "flow_log_bucket"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "cos_bucket",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-object-storage-bucket",
+                                        "version": ">= 0.0.1"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "target",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#ibm-vpc-resource"
+                            },
+                            {
+                                "id": "auth",
+                                "refs": [],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_id",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "id"
+                                },
+                                "type": "string",
+                                "description": "The id of the resource group where the flow logs will be provisioned"
+                            },
+                            {
+                                "name": "cos_bucket_name",
+                                "moduleRef": {
+                                    "id": "cos_bucket",
+                                    "output": "bucket_name"
+                                },
+                                "type": "string",
+                                "description": "Cloud Object Storage bucket name for flow logs"
+                            },
+                            {
+                                "name": "target_count",
+                                "moduleRef": {
+                                    "id": "target",
+                                    "output": "count"
+                                },
+                                "type": "number",
+                                "description": "The number of resources for which flow logs will be created",
+                                "default": 0,
+                                "optional": true
+                            },
+                            {
+                                "name": "target_ids",
+                                "moduleRef": {
+                                    "id": "target",
+                                    "output": "ids"
+                                },
+                                "type": "list(string)",
+                                "description": "The ids of the target resources for the flow log"
+                            },
+                            {
+                                "name": "target_names",
+                                "moduleRef": {
+                                    "id": "target",
+                                    "output": "names"
+                                },
+                                "type": "list(string)",
+                                "description": "The names of the target resources for the flow logs"
+                            },
+                            {
+                                "name": "auth_id",
+                                "moduleRef": {
+                                    "id": "auth",
+                                    "output": "id"
+                                },
+                                "optional": true,
+                                "type": "string",
+                                "description": "The id of the service authorization that allows the flow log to write to the cos bucket",
+                                "default": ""
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the subnet should be provisioned. If 'false' then the subnet will be looked up.",
+                                "default": true,
+                                "optional": true
+                            }
+                        ],
+                        "version": "v1.0.1",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of flow logs created"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the generated flow logs"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The names of the generated flow logs"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc-gateways",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_id",
+                                "type": "string",
+                                "description": "The id of the IBM Cloud resource group where the VPC gateways will be created.",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "id"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the gateway must be provisioned",
+                                "default": true
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            }
+                        ],
+                        "version": "v1.9.0",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of gateways created"
+                            },
+                            {
+                                "name": "gateway_ids",
+                                "description": "List of ids of the gateways created"
+                            },
+                            {
+                                "name": "gateways",
+                                "description": "List of ids and zones of gateways created"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc-subnets",
+                    "alias": "worker-subnets",
+                    "variables": [
+                        {
+                            "name": "_count",
+                            "alias": "mgmt_worker_subnet_count",
+                            "scope": "global",
+                            "value": 3
+                        },
+                        {
+                            "name": "label",
+                            "value": "worker"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.10.10.0/24",
+                                "10.20.10.0/24",
+                                "10.30.10.0/24"
+                            ]
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "gateways",
+                            "ref": "ibm-vpc-gateways"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gateways",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways",
+                                        "version": ">= 0.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "zone_offset",
+                                "type": "number",
+                                "description": "The offset for the zone where the subnet should be created. The default offset is 0 which means the first subnet should be created in zone xxx-1",
+                                "default": "0"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "3",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "gateways",
+                                "type": "list(object({id = string, zone = string}))",
+                                "description": "List of gateway ids and zones",
+                                "default": "[]",
+                                "moduleRef": {
+                                    "id": "gateways",
+                                    "output": "gateways"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "ipv4_address_count",
+                                "type": "number",
+                                "description": "The size of the ipv4 cidr block that should be allocated to the subnet. If {ipv4_cidr_blocks} are provided then this value is ignored.",
+                                "default": "256"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the subnet should be provisioned. If 'false' then the subnet will be looked up.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n     name=string,\n     action=string,\n     direction=string,\n     source=string,\n     destination=string,\n     tcp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     udp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     icmp=optional(object({\n       type=number,\n       code=optional(number)\n     })),\n   }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            }
+                        ],
+                        "version": "v1.13.2",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network acl for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-ocp-vpc",
+                    "alias": "dev_cluster",
+                    "default": true,
+                    "variables": [
+                        {
+                            "name": "disable_public_endpoint",
+                            "value": true
+                        },
+                        {
+                            "name": "kms_enabled",
+                            "value": true
+                        },
+                        {
+                            "name": "worker_count",
+                            "alias": "dev_worker_count"
+                        },
+                        {
+                            "name": "ocp_version",
+                            "value": 4.8
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "subnets",
+                            "ref": "worker-subnets"
+                        },
+                        {
+                            "name": "kms_key",
+                            "ref": "kms_key"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "cos",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-object-storage",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets",
+                                        "version": ">= 1.8.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "kms_key",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-kms-key",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the cluster will be created/can be found.",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api token",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the cluster that will be created within the resource group",
+                                "default": "",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "worker_count",
+                                "type": "number",
+                                "description": "The number of worker nodes that should be provisioned for classic infrastructure",
+                                "default": "3",
+                                "scope": "global",
+                                "important": true
+                            },
+                            {
+                                "name": "flavor",
+                                "type": "string",
+                                "description": "The machine type that will be provisioned for classic infrastructure",
+                                "default": "bx2.4x16",
+                                "important": true
+                            },
+                            {
+                                "name": "ocp_version",
+                                "type": "string",
+                                "description": "The version of the OpenShift cluster that should be provisioned (format 4.x)",
+                                "default": "4.10",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "exists",
+                                "type": "bool",
+                                "description": "Flag indicating if the cluster already exists (true or false)",
+                                "default": false,
+                                "scope": "module"
+                            },
+                            {
+                                "name": "disable_public_endpoint",
+                                "type": "bool",
+                                "description": "Flag indicating that the public endpoint should be disabled",
+                                "default": false
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "ocp_entitlement",
+                                "type": "string",
+                                "description": "Value that is applied to the entitlements for OCP cluster provisioning",
+                                "default": "cloud_pak"
+                            },
+                            {
+                                "name": "force_delete_storage",
+                                "type": "bool",
+                                "description": "Attribute to force the removal of persistent storage associtated with the cluster",
+                                "default": false
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "Name of the VPC instance that will be used",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "vpc_name"
+                                }
+                            },
+                            {
+                                "name": "vpc_subnet_count",
+                                "type": "number",
+                                "description": "Number of vpc subnets",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "count"
+                                }
+                            },
+                            {
+                                "name": "vpc_subnets",
+                                "type": "list(object({\n    label = string\n    id    = string\n    zone  = string\n  }))",
+                                "description": "List of subnets with labels",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "subnets"
+                                }
+                            },
+                            {
+                                "name": "cos_id",
+                                "type": "string",
+                                "description": "The crn of the COS instance that will be used with the OCP instance",
+                                "moduleRef": {
+                                    "id": "cos",
+                                    "output": "id"
+                                }
+                            },
+                            {
+                                "name": "kms_enabled",
+                                "type": "bool",
+                                "description": "Flag indicating that kms encryption should be enabled for this cluster",
+                                "default": false
+                            },
+                            {
+                                "name": "kms_id",
+                                "type": "string",
+                                "description": "The crn of the KMS instance that will be used to encrypt the cluster.",
+                                "default": "null",
+                                "moduleRef": {
+                                    "id": "kms_key",
+                                    "output": "kms_id"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "kms_key_id",
+                                "type": "string",
+                                "description": "The id of the root key in the KMS instance that will be used to encrypt the cluster.",
+                                "default": "null",
+                                "moduleRef": {
+                                    "id": "kms_key",
+                                    "output": "id"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "kms_private_endpoint",
+                                "type": "bool",
+                                "description": "Flag indicating that the private endpoint should be used to connect the KMS system to the cluster.",
+                                "default": true
+                            },
+                            {
+                                "name": "login",
+                                "type": "bool",
+                                "description": "Flag indicating that after the cluster is provisioned, the module should log into the cluster",
+                                "default": false
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order dependencies",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v1.15.4",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "ID of the cluster."
+                            },
+                            {
+                                "name": "name",
+                                "description": "Name of the cluster."
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Name of the resource group containing the cluster."
+                            },
+                            {
+                                "name": "region",
+                                "description": "Region containing the cluster."
+                            },
+                            {
+                                "name": "config_file_path",
+                                "description": "Path to the config file for the cluster."
+                            },
+                            {
+                                "name": "platform",
+                                "type": {
+                                    "lines": [
+                                        "local.cluster_type"
+                                    ]
+                                },
+                                "sensitive": true,
+                                "description": "Configuration values for the cluster platform"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to sync downstream modules"
+                            },
+                            {
+                                "name": "total_worker_count",
+                                "description": "The total number of workers for the cluster. (subnets * number of workers)"
+                            },
+                            {
+                                "name": "workers",
+                                "description": "List of objects containing data for all workers "
+                            },
+                            {
+                                "name": "server_url",
+                                "description": "The url used to connect to the api server. If the cluster has public endpoints enabled this will be the public api server, otherwise this will be the private api server url"
+                            },
+                            {
+                                "name": "username",
+                                "description": "The username of the admin user for the cluster"
+                            },
+                            {
+                                "name": "password",
+                                "description": "The password of the admin user for the cluster",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "token",
+                                "description": "The admin user token used to generate the cluster",
+                                "sensitive": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc-subnets",
+                    "alias": "vpe-subnets",
+                    "variables": [
+                        {
+                            "name": "_count",
+                            "value": 3
+                        },
+                        {
+                            "name": "label",
+                            "value": "vpe"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.10.20.0/24",
+                                "10.20.20.0/24",
+                                "10.30.20.0/24"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gateways",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways",
+                                        "version": ">= 0.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "zone_offset",
+                                "type": "number",
+                                "description": "The offset for the zone where the subnet should be created. The default offset is 0 which means the first subnet should be created in zone xxx-1",
+                                "default": "0"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "3",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "gateways",
+                                "type": "list(object({id = string, zone = string}))",
+                                "description": "List of gateway ids and zones",
+                                "default": "[]",
+                                "moduleRef": {
+                                    "id": "gateways",
+                                    "output": "gateways"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "ipv4_address_count",
+                                "type": "number",
+                                "description": "The size of the ipv4 cidr block that should be allocated to the subnet. If {ipv4_cidr_blocks} are provided then this value is ignored.",
+                                "default": "256"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the subnet should be provisioned. If 'false' then the subnet will be looked up.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n     name=string,\n     action=string,\n     direction=string,\n     source=string,\n     destination=string,\n     tcp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     udp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     icmp=optional(object({\n       type=number,\n       code=optional(number)\n     })),\n   }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            }
+                        ],
+                        "version": "v1.13.2",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network acl for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc-subnets",
+                    "alias": "ingress-subnets",
+                    "variables": [
+                        {
+                            "name": "_count",
+                            "value": 3
+                        },
+                        {
+                            "name": "label",
+                            "value": "ingress"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.10.30.0/24",
+                                "10.20.30.0/24",
+                                "10.30.30.0/24"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gateways",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-gateways",
+                                        "version": ">= 0.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "zone_offset",
+                                "type": "number",
+                                "description": "The offset for the zone where the subnet should be created. The default offset is 0 which means the first subnet should be created in zone xxx-1",
+                                "default": "0"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "3",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "gateways",
+                                "type": "list(object({id = string, zone = string}))",
+                                "description": "List of gateway ids and zones",
+                                "default": "[]",
+                                "moduleRef": {
+                                    "id": "gateways",
+                                    "output": "gateways"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "ipv4_address_count",
+                                "type": "number",
+                                "description": "The size of the ipv4 cidr block that should be allocated to the subnet. If {ipv4_cidr_blocks} are provided then this value is ignored.",
+                                "default": "256"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the subnet should be provisioned. If 'false' then the subnet will be looked up.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n     name=string,\n     action=string,\n     direction=string,\n     source=string,\n     destination=string,\n     tcp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     udp=optional(object({\n       port_min=number,\n       port_max=number,\n       source_port_min=number,\n       source_port_max=number\n     })),\n     icmp=optional(object({\n       type=number,\n       code=optional(number)\n     })),\n   }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "default": [],
+                                "description": "Tags that should be added to the instance"
+                            }
+                        ],
+                        "version": "v1.13.2",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network acl for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpc-vpn-gateway",
+                    "dependencies": [
+                        {
+                            "name": "subnets",
+                            "ref": "vpn-subnets"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets",
+                                        "version": ">= 1.8.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_id",
+                                "type": "string",
+                                "description": "The id of the IBM Cloud resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "id"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api token",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "vpc_name"
+                                }
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "The label for the server instance",
+                                "default": "vpn"
+                            },
+                            {
+                                "name": "vpc_subnet_count",
+                                "type": "number",
+                                "description": "Number of vpc subnets",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "count"
+                                }
+                            },
+                            {
+                                "name": "vpc_subnets",
+                                "type": "list(object({\n    label = string\n    id    = string\n    zone  = string\n  }))",
+                                "description": "List of subnets with labels",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "subnets"
+                                }
+                            },
+                            {
+                                "name": "mode",
+                                "type": "string",
+                                "description": "The optional mode of operation for the VPN gateway. Valid values are route or policy",
+                                "default": "null"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "List of tags for the resource",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the resource should be provisioned. If false the resource will be looked up.",
+                                "default": true
+                            }
+                        ],
+                        "version": "v1.1.4",
+                        "outputs": [
+                            {
+                                "name": "ids",
+                                "description": "The ids of the gateways that were created"
+                            },
+                            {
+                                "name": "crns",
+                                "description": "The crns of the gateways that were created"
+                            },
+                            {
+                                "name": "count",
+                                "description": "The number of gateways that were created"
+                            },
+                            {
+                                "name": "provision",
+                                "description": "The flag indicating that the gateway was provisioned"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-resource-group",
+                    "alias": "cs_resource_group",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "manualResolution": true,
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api key",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group",
+                                "alias": "name",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order the provisioning of the resource group",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v3.2.16",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the resource group"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the resource group"
+                            },
+                            {
+                                "name": "group",
+                                "description": "The resource group object"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to order the provisioning of the resource group"
+                            },
+                            {
+                                "name": "provision",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            },
+                            {
+                                "name": "tags",
+                                "description": "Flag indicating that the resource group was provisioned by this module"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-object-storage",
+                    "alias": "cos",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": false
+                        },
+                        {
+                            "name": "name_prefix",
+                            "alias": "cs_name_prefix",
+                            "scope": "global"
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "resource_group",
+                            "ref": "cs_resource_group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Resource group where the cluster has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "resource_location",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "default": "global"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "Tags that should be applied to the service",
+                                "default": []
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "plan",
+                                "type": "string",
+                                "description": "The type of plan the service instance should run under (lite or standard)",
+                                "default": "standard"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that cos instance should be provisioned",
+                                "default": true
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": "",
+                                "scope": "ignore"
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": "cos"
+                            }
+                        ],
+                        "version": "v4.0.3",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The Object Storage instance id"
+                            },
+                            {
+                                "name": "name",
+                                "description": "The Object Storage instance name"
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The crn of the Object Storage instance"
+                            },
+                            {
+                                "name": "location",
+                                "description": "The Object Storage instance location"
+                            },
+                            {
+                                "name": "key_name",
+                                "description": "The name of the credential provisioned for the Object Storage instance"
+                            },
+                            {
+                                "name": "key_id",
+                                "description": "The name of the credential provisioned for the Object Storage instance"
+                            },
+                            {
+                                "name": "service",
+                                "description": "The name of the key provisioned for the Object Storage instance"
+                            },
+                            {
+                                "name": "label",
+                                "description": "The label used for the Object Storage instance"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of the resource"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-kms-key",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": true
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "kms",
+                            "ref": "kms"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "kms",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-key-protect",
+                                        "version": ">= 1.0.0"
+                                    },
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-hpcs",
+                                        "version": ">= 1.0.0"
+                                    },
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-kms",
+                                        "version": ">= 0.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the key should be provisioned. If false then an existing key will be looked up",
+                                "default": false
+                            },
+                            {
+                                "name": "kms_id",
+                                "type": "string",
+                                "description": "The id of the kms instance. Required if kms_enabled is true",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "kms",
+                                    "output": "guid"
+                                }
+                            },
+                            {
+                                "name": "kms_public_url",
+                                "type": "string",
+                                "description": "The public url of the kms instance. Required if kms_enabled is true",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "kms",
+                                    "output": "public_url"
+                                }
+                            },
+                            {
+                                "name": "kms_private_url",
+                                "type": "string",
+                                "description": "The private url of the kms instance. Required if kms_enabled is true",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "kms",
+                                    "output": "private_url"
+                                }
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the root key in the kms instance. Required if kms_enabled is true",
+                                "default": ""
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The name_prefix used to build the name if one is not provided. If used the name will be `{name_prefix}-{label}`",
+                                "default": "base",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "The label used to build the name if one is not provided. If used the name will be `{name_prefix}-{label}`",
+                                "default": "key"
+                            },
+                            {
+                                "name": "rotation_interval",
+                                "type": "number",
+                                "description": "The interval in months that a root key needs to be rotated.",
+                                "default": "3"
+                            },
+                            {
+                                "name": "dual_auth_delete",
+                                "type": "bool",
+                                "description": "Flag indicating that the key requires dual authorization to be deleted.",
+                                "default": false
+                            },
+                            {
+                                "name": "force_delete",
+                                "type": "bool",
+                                "description": "Flag indicating that 'force' should be applied to key on delete",
+                                "default": true
+                            }
+                        ],
+                        "version": "v1.5.2",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the key"
+                            },
+                            {
+                                "name": "name",
+                                "description": "The crn of the key"
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The crn of the key"
+                            },
+                            {
+                                "name": "kms_id",
+                                "description": "The id of the kms instance"
+                            },
+                            {
+                                "name": "kms_public_url",
+                                "description": "The public url of the kms instance"
+                            },
+                            {
+                                "name": "kms_private_url",
+                                "description": "The private url of the kms instance"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-activity-tracker",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "manualResolution": true,
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api key",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Resource group where the cluster has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "resource_location",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global",
+                                "alias": "region"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "Tags that should be applied to the service",
+                                "default": []
+                            },
+                            {
+                                "name": "plan",
+                                "type": "string",
+                                "description": "The type of plan the service instance should run under (lite, 7-day, 14-day, or 30-day)",
+                                "default": "7-day"
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order the provisioning of the instance",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v2.4.15",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "guid",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "name",
+                                "description": "The name of the provisioned instance."
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The id of the provisioned instance"
+                            },
+                            {
+                                "name": "location",
+                                "description": "The location of the provisioned instance"
+                            },
+                            {
+                                "name": "service",
+                                "description": "The service name of the key provisioned for the instance"
+                            },
+                            {
+                                "name": "label",
+                                "description": "The label for the instance"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to order the provisioning of the instance"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-object-storage-bucket",
+                    "alias": "flow_log_bucket",
+                    "variables": [
+                        {
+                            "name": "label",
+                            "value": "flow-logs"
+                        },
+                        {
+                            "name": "allowed_ip",
+                            "value": [
+                                "0.0.0.0/0"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "cos",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-object-storage",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "kms_key",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-kms-key",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "activity_tracker",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-activity-tracker",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "metrics_monitoring",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-sysdig",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.11.1"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                },
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC instance will be created."
+                            },
+                            {
+                                "name": "cos_instance_id",
+                                "moduleRef": {
+                                    "id": "cos",
+                                    "output": "id"
+                                },
+                                "type": "string",
+                                "description": "id of the COS instance"
+                            },
+                            {
+                                "name": "cos_key_id",
+                                "moduleRef": {
+                                    "id": "cos",
+                                    "output": "key_id"
+                                },
+                                "type": "string",
+                                "description": "The id of the key provisioned for the COS instance",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "kms_key_crn",
+                                "moduleRef": {
+                                    "id": "kms_key",
+                                    "output": "crn"
+                                },
+                                "type": "string",
+                                "description": "The crn of the root key in the KMS",
+                                "default": "null",
+                                "optional": true
+                            },
+                            {
+                                "name": "activity_tracker_crn",
+                                "moduleRef": {
+                                    "id": "activity_tracker",
+                                    "output": "crn"
+                                },
+                                "optional": true,
+                                "type": "string",
+                                "description": "The crn of the Activity Tracking instance",
+                                "default": "null"
+                            },
+                            {
+                                "name": "metrics_monitoring_crn",
+                                "moduleRef": {
+                                    "id": "metrics_monitoring",
+                                    "output": "crn"
+                                },
+                                "optional": true,
+                                "type": "string",
+                                "description": "The crn of the Metrics Monitoring instance",
+                                "default": "null"
+                            },
+                            {
+                                "name": "vpc_ip_addresses",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "addresses"
+                                },
+                                "optional": true,
+                                "type": "list(string)",
+                                "description": "The list of ip addresses in the VPC that should be allowed to access the bucket.",
+                                "default": null
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "The IBM Cloud api token"
+                            },
+                            {
+                                "name": "region",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "Bucket region"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "The name of the cos resource",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "suffix",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "Value added to the generated name to ensure it is unique",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the instance should be provisioned. If false then an existing instance will be looked up",
+                                "default": true,
+                                "optional": true
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "Name of the bucket",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label used to build the bucket name of not provided.",
+                                "default": "bucket",
+                                "optional": true
+                            },
+                            {
+                                "name": "cross_region_location",
+                                "type": "string",
+                                "description": "The cross-region location of the bucket. This value is optional. Valid values are (us, eu, and ap). This value takes precedence over others if provided.",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "storage_class",
+                                "type": "string",
+                                "description": "Storage class of the bucket. Supported values are standard, vault, cold, flex, smart.",
+                                "default": "standard",
+                                "optional": true
+                            },
+                            {
+                                "name": "allowed_ip",
+                                "type": "list(string)",
+                                "description": "A list of IPv4 or IPv6 addresses in CIDR notation that you want to allow access to your IBM Cloud Object Storage bucket.",
+                                "default": null,
+                                "optional": true
+                            },
+                            {
+                                "name": "enable_object_versioning",
+                                "type": "bool",
+                                "description": "Object Versioning allows the COS user to keep multiple versions of an object in a bucket to protect against accidental deletion or overwrites. (Default = false)",
+                                "default": false,
+                                "optional": true
+                            }
+                        ],
+                        "version": "v0.8.3",
+                        "outputs": [
+                            {
+                                "name": "bucket_name",
+                                "description": "The name of the COS bucket instance"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The ID of the COS bucket instance"
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The CRN of the COS bucket instance"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-vpe-gateway",
+                    "alias": "vpe-cos",
+                    "dependencies": [
+                        {
+                            "name": "resource",
+                            "ref": "cos"
+                        },
+                        {
+                            "name": "subnets",
+                            "ref": "vpe-subnets"
+                        },
+                        {
+                            "name": "sync",
+                            "ref": "dev_cluster"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc-subnets",
+                                        "version": ">= 1.8.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "resource",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#ibm-service",
+                                "optional": true
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC gateways will be created.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The IBM Cloud api token",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The name of the vpc resource",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "type": "string",
+                                "description": "The id of the vpc instance",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "vpc_id"
+                                }
+                            },
+                            {
+                                "name": "vpc_subnet_count",
+                                "type": "number",
+                                "description": "Number of vpc subnets",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "count"
+                                }
+                            },
+                            {
+                                "name": "vpc_subnets",
+                                "type": "list(object({\n    label = string\n    id    = string\n    zone  = string\n  }))",
+                                "description": "List of subnets with labels",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "subnets"
+                                }
+                            },
+                            {
+                                "name": "resource_label",
+                                "type": "string",
+                                "description": "The label for the resource to which the vpe will be connected. Used as a tag and as part of the vpe name.",
+                                "moduleRef": {
+                                    "id": "resource",
+                                    "output": "label"
+                                }
+                            },
+                            {
+                                "name": "resource_crn",
+                                "type": "string",
+                                "description": "The crn of the resource to which the vpe will be connected.",
+                                "moduleRef": {
+                                    "id": "resource",
+                                    "output": "crn"
+                                }
+                            },
+                            {
+                                "name": "resource_service",
+                                "type": "string",
+                                "description": "The endpoint gateway target resource type. Values can be provider_cloud_service, provider_infrastructure_service, ?.",
+                                "moduleRef": {
+                                    "id": "resource",
+                                    "output": "service"
+                                }
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to synchronize dependencies between modules",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            }
+                        ],
+                        "version": "v1.6.1",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the created VPE gateway"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to synchronize downstream modules"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-transit-gateway",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": false
+                        },
+                        {
+                            "name": "name_prefix",
+                            "alias": "cs_name_prefix",
+                            "scope": "global"
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "resource-group",
+                            "ref": "cs_resource_group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "discriminator": "*"
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "moduleRef": {
+                                    "id": "resource-group",
+                                    "output": "name"
+                                },
+                                "type": "string",
+                                "description": "Resource group where the cluster has been provisioned."
+                            },
+                            {
+                                "name": "connections",
+                                "moduleRef": {
+                                    "id": "vpc",
+                                    "output": "crn"
+                                },
+                                "mapper": "collect",
+                                "type": "list(string)",
+                                "description": "The list of vpc instance resource_crn to add network connections for."
+                            },
+                            {
+                                "name": "region",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)"
+                            },
+                            {
+                                "name": "name",
+                                "scope": "module",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "name_prefix",
+                                "scope": "global",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the transit gateway must be provisioned",
+                                "default": true,
+                                "optional": true
+                            }
+                        ],
+                        "version": "v0.2.2",
+                        "outputs": []
+                    }
+                },
+                {
+                    "name": "ibm-log-analysis",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": false
+                        },
+                        {
+                            "name": "name_prefix",
+                            "alias": "cs_name_prefix",
+                            "scope": "global"
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "resource_group",
+                            "ref": "cs_resource_group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Existing resource group where the IKS cluster will be provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "plan",
+                                "type": "string",
+                                "description": "The type of plan the service instance should run under (lite, 7-day, 14-day, or 30-day)",
+                                "default": "7-day"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "Tags that should be applied to the service",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that logdna instance should be provisioned",
+                                "default": true
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "The label used to build the resource name if not provided",
+                                "default": "logging"
+                            }
+                        ],
+                        "version": "v4.1.2",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "guid",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "name",
+                                "description": "The name of the provisioned instance."
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The id of the provisioned instance"
+                            },
+                            {
+                                "name": "location",
+                                "description": "The location of the provisioned instance"
+                            },
+                            {
+                                "name": "service",
+                                "description": "The service name of the provisioned instance"
+                            },
+                            {
+                                "name": "label",
+                                "description": "The label for the instance"
+                            },
+                            {
+                                "name": "key_name",
+                                "description": "The name of the key provisioned for the LogDNA instance."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-cloud-monitoring",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": false
+                        },
+                        {
+                            "name": "name_prefix",
+                            "alias": "cs_name_prefix",
+                            "scope": "global"
+                        }
+                    ],
+                    "dependencies": [
+                        {
+                            "name": "resource_group",
+                            "ref": "cs_resource_group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "ibm",
+                                "source": "ibm-cloud/ibm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Existing resource group where the IKS cluster will be provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The prefix name for the service. If not provided it will default to the resource group name",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "plan",
+                                "type": "string",
+                                "description": "The type of plan the service instance should run under (trial or graduated-tier)",
+                                "default": "graduated-tier"
+                            },
+                            {
+                                "name": "tags",
+                                "type": "list(string)",
+                                "description": "Tags that should be applied to the service",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that logdna instance should be provisioned",
+                                "default": true
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name that should be used for the service, particularly when connecting to an existing service. If not provided then the name will be defaulted to {name prefix}-{service}",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "The label used to build the resource name if not provided.",
+                                "default": "monitoring"
+                            }
+                        ],
+                        "version": "v4.1.2",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "guid",
+                                "description": "The id of the provisioned instance."
+                            },
+                            {
+                                "name": "name",
+                                "description": "The name of the provisioned instance."
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The id of the provisioned instance"
+                            },
+                            {
+                                "name": "location",
+                                "description": "The location of the provisioned instance"
+                            },
+                            {
+                                "name": "service",
+                                "description": "The service name of the provisioned instance"
+                            },
+                            {
+                                "name": "label",
+                                "description": "The label for the instance"
+                            },
+                            {
+                                "name": "key_name",
+                                "description": "The name of the key provisioned for the Sysdig instance."
+                            },
+                            {
+                                "name": "access_key",
+                                "description": "The access key for the Sysdig instance.",
+                                "sensitive": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-log-analysis-bind",
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "kubernetes",
+                            "ocp3",
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "cluster",
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#cluster",
+                                "refs": []
+                            },
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "logdna",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-log-analysis",
+                                        "version": ">= 3.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sysdig_bind",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-cloud-monitoring-bind",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Existing resource group where the IKS cluster will be provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "The apikey used to access the IBM Cloud account",
+                                "sensitive": true,
+                                "scope": "global"
+                            },
+                            {
+                                "name": "logdna_id",
+                                "type": "string",
+                                "description": "The id of the logdna instance that will be gound to the cluster",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "logdna",
+                                    "output": "guid"
+                                }
+                            },
+                            {
+                                "name": "cluster_name",
+                                "type": "string",
+                                "description": "The name of the cluster",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "name"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "cluster_id",
+                                "type": "string",
+                                "description": "The identifier for the cluster",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "id"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "private_endpoint",
+                                "type": "string",
+                                "description": "Flag indicating that the agent should be created with private endpoints",
+                                "default": "true",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Semaphore to synchronize activities between modules",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sysdig_bind",
+                                    "output": "sync"
+                                },
+                                "optional": true
+                            }
+                        ],
+                        "version": "v1.3.5",
+                        "outputs": [
+                            {
+                                "name": "sync"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ibm-cloud-monitoring-bind",
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "kubernetes",
+                            "ocp3",
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "cluster",
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#cluster",
+                                "refs": []
+                            },
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-resource-group",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sysdig",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-ibm-cloud-monitoring",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "ibmcloud_api_key",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "sensitive": true,
+                                "scope": "global"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Geographic location of the resource (e.g. us-south, us-east)",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "guid",
+                                "type": "string",
+                                "description": "The guid of the existing Sysdig instance",
+                                "moduleRef": {
+                                    "id": "sysdig",
+                                    "output": "guid"
+                                }
+                            },
+                            {
+                                "name": "access_key",
+                                "type": "string",
+                                "description": "The access key of the existing Sysdig instance",
+                                "moduleRef": {
+                                    "id": "sysdig",
+                                    "output": "access_key"
+                                }
+                            },
+                            {
+                                "name": "namespace",
+                                "type": "string",
+                                "description": "The namespace where the agent should be deployed",
+                                "default": "ibm-observe"
+                            },
+                            {
+                                "name": "cluster_name",
+                                "type": "string",
+                                "description": "The name of the cluster into which the sysdig instance should be bound",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "cluster_id",
+                                "type": "string",
+                                "description": "The id of the cluster into which the sysdig instance should be bound",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "id"
+                                }
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Semaphore value to sync up modules",
+                                "default": ""
+                            },
+                            {
+                                "name": "private_endpoint",
+                                "type": "string",
+                                "description": "Flag indicating that the agent should be created with private endpoints",
+                                "default": "true",
+                                "scope": "global"
+                            }
+                        ],
+                        "version": "v1.3.4",
+                        "outputs": [
+                            {
+                                "name": "sync"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "variables": [
+                {
+                    "name": "mgmt_resource_group_name"
+                },
+                {
+                    "name": "mgmt_resource_group_provision"
+                },
+                {
+                    "name": "region"
+                },
+                {
+                    "name": "ibmcloud_api_key"
+                },
+                {
+                    "name": "name_prefix",
+                    "alias": "mgmt_name_prefix",
+                    "required": true
+                },
+                {
+                    "name": "cs_resource_group_name"
+                },
+                {
+                    "name": "cs_name_prefix"
+                },
+                {
+                    "name": "worker_count"
+                },
+                {
+                    "name": "kms_service"
+                }
+            ]
+        }
+    }
+}
