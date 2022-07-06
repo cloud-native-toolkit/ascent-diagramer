@@ -160,18 +160,18 @@ def diagram():
             nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"]
 
             
-            if type == "ibm-standard":
-                with Cluster("Enterprise Network"):
-                    dir = FileSync("Enterprise Directory")
-                    User("Enterprise User")
-                    EnterpriseApplications("Enterprise Application")
-                nodes["vpe3"] >> DirectLink() >> dir
         if type == "ibm-standard":
             with Cluster("Remote Employee"):
                 User("Remote employee") >> Cloudant() >> nodes["vpe1"]
             with Cluster("Consumer"):
                 user = User("Users")
                 internet = Cloudant("Internet")
+            with Cluster("Enterprise Network"):
+                    dir = FileSync("Enterprise Directory")
+                    User("Enterprise User")
+                    EnterpriseApplications("Enterprise Application")
+            
+            nodes["vpe3"] >> DirectLink("Direct link") >> dir
                 
             user >> internet >> InternetServices("Cloud Internet Service") \
                 >> Bridge("Private LB") >> nodes["worker1"]
