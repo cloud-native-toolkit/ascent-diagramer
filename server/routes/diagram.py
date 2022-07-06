@@ -31,7 +31,7 @@ import json
 
 
 # change type of diagram here
-type = "ibm-development"
+type = "quickstart"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
@@ -127,35 +127,40 @@ def diagram():
                     nodes.update({serv: n})
             
             with Cluster(type + " (VPC)"):
-                if clusters["worker-subnets"][0] > 0:
+                if clusters["worker-subnets"][0] > 0: 
                     for net in range(1, clusters["worker-subnets"][0] + 1):
                         with Cluster("Zone " + str(net)):
-                            for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                s = str(clusters["worker-subnets"][1][worker]) + " - worker"+str(net)
-                                n = workernode(s)
-                                nodes.update({"worker"+str(net): n})
-                            
-                    for net in range(1, clusters["vpe-subnets"][0] + 1):
-                        with Cluster("Zone " + str(net)):
-                            for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                s = str(clusters["vpe-subnets"][1][worker]) + " - vpe"+str(net)
+                            s = str(clusters["worker-subnets"][1][net - 1]) + " - worker"+str(net)
+                            n = workernode(s)
+                            nodes.update({"worker"+str(net): n})
+                            # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
+                            #     s = str(clusters["worker-subnets"][1][worker]) + " - worker"+str(net)
+                            #     n = workernode(s)
+                            #     nodes.update({"worker"+str(net): n})
+                    
+                    if clusters["vpe-subnets"][0] > 0:
+                        for net in range(1, clusters["vpe-subnets"][0] + 1):
+                            with Cluster("Zone " + str(net)):
+                                s = str(clusters["vpe-subnets"][1][net - 1]) + " - vpe"+str(net)
                                 n = vpenode(s)
                                 nodes.update({"vpe"+str(net): n})
+                                # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
+                                #     s = str(clusters["vpe-subnets"][1][worker]) + " - vpe"+str(net)
+                                #     n = vpenode(s)
+                                #     nodes.update({"vpe"+str(net): n})
+                        nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] 
                     
                     if clusters["ingress-subnets"][0] > 0:
                         for net in range(1, clusters["ingress-subnets"][0] + 1):
                             with Cluster("Zone " + str(net)):
-                                for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                    s = str(clusters["ingress-subnets"][1][worker]) + " - ingress"+str(net)
-                                    n = ingressnode(s)
-                                    nodes.update({"ingress"+str(net): n})
-                                
-                    print(nodes)
-                    
-                    nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] \
-                        - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
-
-
+                                s = str(clusters["ingress-subnets"][1][net - 1]) + " - ingress"+str(net)
+                                n = ingressnode(s)
+                                nodes.update({"ingress"+str(net): n})
+                                # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
+                                #     s = str(clusters["ingress-subnets"][1][worker]) + " - ingress"+str(net)
+                                #     n = ingressnode(s)
+                                #     nodes.update({"ingress"+str(net): n})
+                        nodes["ingress1"] - Edge(color="red") - nodes["ingress2"] - Edge(color="red") - nodes["ingress3"]
                     
                 else:
                     for net in range(1, clusters["ibm-vpc-subnets"][0] + 1):
@@ -164,10 +169,13 @@ def diagram():
                                 s = str(clusters["ibm-ocp-vpc"][1][worker]) + " - worker"+str(net)
                                 n = workernode(s)
                                 nodes.update({"worker"+str(net): n})
-                    nodes["worker3"] - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
- 
-            nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"]
 
+            nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"] \
+                - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
+
+        print(clusters["worker-subnets"])
+        print(clusters["vpe-subnets"])
+        print(clusters["ingress-subnets"])
             
         if type == "ibm-standard" or type == 'ibm-production':
             with Cluster("Remote Employee"):
@@ -182,8 +190,7 @@ def diagram():
             
             nodes["vpe3"] >> DirectLink("Direct link") >> dir
                 
-            user >> internet >> InternetServices("Cloud Internet Service") \
-                >> Bridge("Private LB") >> nodes["worker1"]
+            user >> internet >> InternetServices("Cloud Internet Service") >> Bridge("Private LB")
 
 
 
