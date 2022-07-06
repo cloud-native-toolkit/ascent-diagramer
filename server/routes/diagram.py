@@ -19,7 +19,7 @@ from diagrams.ibm.general import Monitoring, MonitoringLogging, Cloudant, IotClo
 from diagrams.ibm.data import Cloud
 from diagrams.ibm.storage import ObjectStorage
 from diagrams.ibm.infrastructure import Diagnostics
-from diagrams.ibm.network import InternetServices, VpnConnection, Router, Bridge, DirectLink
+from diagrams.ibm.network import InternetServices, VpnConnection, Router, Bridge, DirectLink, Gateway
 from diagrams.ibm.management import DeviceManagement
 from diagrams.ibm.user import User, Browser
 from diagrams.ibm.compute import Key
@@ -31,7 +31,7 @@ import json
 
 
 # change type of diagram here
-type = "quickstart"
+type = "ibm-edge"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
@@ -43,7 +43,9 @@ platservice = {"ibm-log-analysis": MonitoringLogging, "ibm-cloud-monitoring": Mo
 
 workernode = Key  # Cloud, Router
 vpenode = VpnConnection
-ingressnode = Browser
+ingressnode = Bridge
+bastionnode = DeviceManagement
+egressnode = Cloud
 
 @app.route("/diagram")
 def diagram():
@@ -53,7 +55,7 @@ def diagram():
         with Cluster(file["bom"]["metadata"]["labels"]["platform"] + " Cloud"):
             # have a dict of dependencies, key is the name and val is the list of nodes
             clusters = {"ibm-vpc-subnets": [3, [0]], "ibm-ocp-vpc": [0, [0]], 
-                        "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]], "ingress-subnets": [0, [0]]} 
+                        "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]], "ingress-subnets": [0, [0]], "bastion-subnets": [0, [0]], "egress-subnets": [0, [0]]} 
             services = []
             # iterate through modules
             for i in file["bom"]["spec"]["modules"]:
@@ -119,12 +121,15 @@ def diagram():
                                 # else:
                                 #     clusters[s] = [name]
 
-
+        
             nodes = {}
-            with Cluster("Cloud Services"):
-                for serv in services:
-                    n = platservice[serv](serv)
-                    nodes.update({serv: n})
+            if type != "ibm-edge":
+                with Cluster("Cloud Services"):
+                    if "cos" in services and "ibm-object-storage" in services:
+                        services.remove("cos")
+                    for serv in services:
+                        n = platservice[serv](serv)
+                        nodes.update({serv: n})
             
             with Cluster(type + " (VPC)"):
                 if clusters["worker-subnets"][0] > 0: 
@@ -133,64 +138,87 @@ def diagram():
                             s = str(clusters["worker-subnets"][1][net - 1]) + " - worker"+str(net)
                             n = workernode(s)
                             nodes.update({"worker"+str(net): n})
-                            # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                            #     s = str(clusters["worker-subnets"][1][worker]) + " - worker"+str(net)
-                            #     n = workernode(s)
-                            #     nodes.update({"worker"+str(net): n})
+                    nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"] 
                     
-                    if clusters["vpe-subnets"][0] > 0:
-                        for net in range(1, clusters["vpe-subnets"][0] + 1):
-                            with Cluster("Zone " + str(net)):
-                                s = str(clusters["vpe-subnets"][1][net - 1]) + " - vpe"+str(net)
-                                n = vpenode(s)
-                                nodes.update({"vpe"+str(net): n})
-                                # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                #     s = str(clusters["vpe-subnets"][1][worker]) + " - vpe"+str(net)
-                                #     n = vpenode(s)
-                                #     nodes.update({"vpe"+str(net): n})
-                        nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] 
-                    
-                    if clusters["ingress-subnets"][0] > 0:
-                        for net in range(1, clusters["ingress-subnets"][0] + 1):
-                            with Cluster("Zone " + str(net)):
-                                s = str(clusters["ingress-subnets"][1][net - 1]) + " - ingress"+str(net)
-                                n = ingressnode(s)
-                                nodes.update({"ingress"+str(net): n})
-                                # for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                #     s = str(clusters["ingress-subnets"][1][worker]) + " - ingress"+str(net)
-                                #     n = ingressnode(s)
-                                #     nodes.update({"ingress"+str(net): n})
-                        nodes["ingress1"] - Edge(color="red") - nodes["ingress2"] - Edge(color="red") - nodes["ingress3"]
-                    
-                else:
+                    conslink = nodes["worker1"]
+                    dirlink = nodes["worker3"]
+
+                elif clusters["ibm-ocp-vpc"][0] > 0:
                     for net in range(1, clusters["ibm-vpc-subnets"][0] + 1):
                         with Cluster("Zone " + str(net)):
-                            for worker in range(0, clusters["ibm-ocp-vpc"][0]):
-                                s = str(clusters["ibm-ocp-vpc"][1][worker]) + " - worker"+str(net)
-                                n = workernode(s)
-                                nodes.update({"worker"+str(net): n})
+                            s = "worker"+str(net)
+                            n = workernode(s)
+                            nodes.update({"worker"+str(net): n})
+                    nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"] \
+                        >> nodes["ibm-log-analysis"]
+                    
 
-            nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"] \
-                - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
+                if clusters["vpe-subnets"][0] > 0:
+                    for net in range(1, clusters["vpe-subnets"][0] + 1):
+                        with Cluster("Zone " + str(net)):
+                            s = str(clusters["vpe-subnets"][1][net - 1]) + " - vpe"+str(net)
+                            n = vpenode(s)
+                            nodes.update({"vpe"+str(net): n})
+                    nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] \
+                        >> Gateway("VPE Gateway") >> nodes["ibm-log-analysis"]
+                    
+                    emplink = nodes["vpe1"]
 
-        print(clusters["worker-subnets"])
-        print(clusters["vpe-subnets"])
-        print(clusters["ingress-subnets"])
+
+                if clusters["ingress-subnets"][0] > 0:
+                    for net in range(1, clusters["ingress-subnets"][0] + 1):
+                        with Cluster("Zone " + str(net)):
+                            s = str(clusters["ingress-subnets"][1][net - 1]) + " - ingress"+str(net)
+                            n = ingressnode(s)
+                            nodes.update({"ingress"+str(net): n})
+                    nodes["ingress1"] - Edge(color="red") - nodes["ingress2"] - Edge(color="red") - nodes["ingress3"]
+                    
+                    conslink = nodes["ingress1"]
+                    emplink = nodes["ingress1"]
+                    dirlink = nodes["ingress3"]
+                
+
+                if clusters["bastion-subnets"][0] > 0:
+                    for net in range(1, clusters["bastion-subnets"][0] + 1):
+                        with Cluster("Zone " + str(net)):
+                            s = str(clusters["bastion-subnets"][1][net - 1]) + " - bastion"+str(net)
+                            n = bastionnode(s)
+                            nodes.update({"bastion"+str(net): n})
+                    nodes["bastion1"] - Edge(color="red") - nodes["bastion2"] - Edge(color="red") - nodes["bastion3"] 
+                
+
+                if clusters["egress-subnets"][0] > 0:
+                    for net in range(1, clusters["egress-subnets"][0] + 1):
+                        with Cluster("Zone " + str(net)):
+                            s = str(clusters["egress-subnets"][1][net - 1]) + " - egress"+str(net)
+                            n = egressnode(s)
+                            nodes.update({"egress"+str(net): n})
+                    nodes["egress1"] - Edge(color="red") - nodes["egress2"] - Edge(color="red") - nodes["egress3"]
+                
+
+        # print(clusters["worker-subnets"])
+        # print(clusters["vpe-subnets"])
+        # print(clusters["ingress-subnets"])
+        # print(clusters["bastion-subnets"])
+        # print(clusters["egress-subnets"])
+
             
-        if type == "ibm-standard" or type == 'ibm-production':
-            with Cluster("Remote Employee"):
-                User("Remote employee") >> Cloudant() >> nodes["vpe1"]
-            with Cluster("Consumer"):
-                user = User("Users")
-                internet = Cloudant("Internet")
-            with Cluster("Enterprise Network"):
+        if type != "quickstart":
+            if type == "ibm-production" or type == "ibm-standard":
+                with Cluster("Consumer"):
+                    user = User("Users")
+                    internet = Cloudant("Internet")
+                user >> internet >> InternetServices("Cloud Internet Service") >> Bridge("Private LB") >> conslink
+            if type == "ibm-edge" or type == "ibm-standard":
+                with Cluster("Remote Employee"):
+                    User("Remote employee") >> Cloudant() >> emplink
+                with Cluster("Enterprise Network"):
                     dir = FileSync("Enterprise Directory")
                     User("Enterprise User")
                     EnterpriseApplications("Enterprise Application")
-            
-            nodes["vpe3"] >> DirectLink("Direct link") >> dir
+                dirlink >> DirectLink("Direct link") >> dir
                 
-            user >> internet >> InternetServices("Cloud Internet Service") >> Bridge("Private LB")
+            
 
 
 
