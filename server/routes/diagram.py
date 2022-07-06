@@ -19,10 +19,17 @@ from diagrams.aws.storage import S3
 from diagrams.gcp.analytics import BigQuery
 from diagrams.gcp.storage import GCS
 
-from diagrams.ibm.general import Monitoring, MonitoringLogging
+from diagrams.ibm.general import Monitoring, MonitoringLogging, Cloudant, IotCloud
+from diagrams.ibm.data import Cloud
 from diagrams.ibm.storage import ObjectStorage
 from diagrams.ibm.infrastructure import Diagnostics
-from diagrams.ibm.network import InternetServices, VpnConnection
+from diagrams.ibm.network import InternetServices, VpnConnection, Router, Bridge, DirectLink
+from diagrams.ibm.management import DeviceManagement
+from diagrams.ibm.user import User, Browser
+from diagrams.ibm.compute import Key
+from diagrams.ibm.social import FileSync
+from diagrams.ibm.applications import EnterpriseApplications
+
 
 import json
 
@@ -39,7 +46,7 @@ ignored = ["ibm-resource-group", "ibm-access-group", "ibm-vpc-gateways", "ibm-lo
 platservice = {"ibm-log-analysis": MonitoringLogging, "ibm-cloud-monitoring": Monitoring, "ibm-activity-tracker":Diagnostics, 
                 "ibm-object-storage":ObjectStorage, "cos":ObjectStorage}  # dict of cloud services
 
-workernode = InternetServices
+workernode = Key  # Cloud, Router
 vpenode = VpnConnection
 
 @app.route("/diagram")
@@ -138,7 +145,9 @@ def diagram():
                                 nodes.update({"vpe"+str(net): n})
                     nodes["vpe1"] - Edge(color="red") - nodes["vpe2"] - Edge(color="red") - nodes["vpe3"] \
                         - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
-                            
+
+
+                    
                 else:
                     for net in range(1, clusters["ibm-vpc-subnets"][0] + 1):
                         with Cluster("Zone " + str(net)):
@@ -149,6 +158,25 @@ def diagram():
                     nodes["worker3"] - Edge(color="blue", style="dashed") - nodes["ibm-log-analysis"]
  
             nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"]
+
+            
+            if type == "ibm-standard":
+                with Cluster("Enterprise Network"):
+                    dir = FileSync("Enterprise Directory")
+                    User("Enterprise User")
+                    EnterpriseApplications("Enterprise Application")
+                nodes["vpe3"] >> DirectLink() >> dir
+        if type == "ibm-standard":
+            with Cluster("Remote Employee"):
+                User("Remote employee") >> Cloudant() >> nodes["vpe1"]
+            with Cluster("Consumer"):
+                user = User("Users")
+                internet = Cloudant("Internet")
+                
+            user >> internet >> InternetServices("Cloud Internet Service") \
+                >> Bridge("Private LB") >> nodes["worker1"]
+
+
 
             # create new cluster for each key
             # for clust in clusters.keys():
