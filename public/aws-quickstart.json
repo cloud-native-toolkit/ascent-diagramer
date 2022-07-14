@@ -1,0 +1,1063 @@
+{
+    "bom": {
+        "apiVersion": "cloud.ibm.com/v1alpha1",
+        "kind": "BillOfMaterial",
+        "metadata": {
+            "name": "aws-quickstart-architecture"
+        },
+        "spec": {
+            "modules": [
+                {
+                    "name": "aws-vpc",
+                    "alias": "aws-vpc",
+                    "variables": [
+                        {
+                            "name": "internal_cidr",
+                            "value": "10.0.0.0/16"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "aws",
+                                "source": "hashicorp/aws"
+                            }
+                        ],
+                        "dependencies": [],
+                        "variables": [
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the VPC instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "internal_cidr",
+                                "type": "string",
+                                "description": "The cidr range of the internal network for the AWS VPC. Either provide manually or chose from AWS IPAM poolsß",
+                                "default": "10.0.0.0/16"
+                            },
+                            {
+                                "name": "external_cidr",
+                                "type": "string",
+                                "description": "The cidr range of the external network for the AWS VPC.",
+                                "default": "0.0.0.0/0"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the instance should be provisioned. If false then an existing instance will be looked up",
+                                "default": true
+                            },
+                            {
+                                "name": "instance_tenancy",
+                                "type": "string",
+                                "description": "Instance is shared / dedicated, etc. #[default, dedicated, host]",
+                                "default": "default"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "enable_dns_support",
+                                "type": "string",
+                                "description": "default is true. [true, false]]",
+                                "default": "true"
+                            },
+                            {
+                                "name": "enable_dns_hostnames",
+                                "type": "string",
+                                "description": "Default is true. [true, false]]. ROSA cluster requires this to be set as true",
+                                "default": "true"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default",
+                                "scope": "global"
+                            }
+                        ],
+                        "version": "v1.6.0",
+                        "outputs": [
+                            {
+                                "name": "vpc"
+                            },
+                            {
+                                "name": "vpc_name"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id for the vpc network"
+                            },
+                            {
+                                "name": "vpc_arn",
+                                "description": "The arn of the vpc"
+                            },
+                            {
+                                "name": "default_network_acl_id",
+                                "description": "The id for the default network acl"
+                            },
+                            {
+                                "name": "default_security_group_id",
+                                "description": "The id of the default security group."
+                            },
+                            {
+                                "name": "default_security_group_arn",
+                                "description": "The arn of the default security group."
+                            },
+                            {
+                                "name": "vpc_cidr",
+                                "description": "The internal vpc cidr."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-internet-gateway",
+                    "alias": "igw",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "aws",
+                                "source": "hashicorp/aws"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "aws-vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the IGW instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the VPC instance",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "aws-vpc",
+                                    "output": "vpc_name"
+                                }
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag to determine whether to provision Internet gateway or not. Defautl set to true",
+                                "default": true,
+                                "scope": "module"
+                            }
+                        ],
+                        "version": "v1.2.1",
+                        "outputs": [
+                            {
+                                "name": "igw_id   "
+                            },
+                            {
+                                "name": "ids  "
+                            },
+                            {
+                                "name": "igw_arn    "
+                            },
+                            {
+                                "name": "vpc_name    "
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-kms",
+                    "alias": "aws-kms",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": ""
+                            },
+                            {
+                                "name": "description",
+                                "type": "string",
+                                "default": "Storage-kms",
+                                "description": "The description of the key as viewed in AWS console."
+                            },
+                            {
+                                "name": "user_arn",
+                                "default": "\"arn:aws:iam::005990573564:root\""
+                            },
+                            {
+                                "name": "key_spec",
+                                "type": "string",
+                                "default": "SYMMETRIC_DEFAULT",
+                                "description": "Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: SYMMETRIC_DEFAULT, RSA_2048, RSA_3072, RSA_4096, ECC_NIST_P256, ECC_NIST_P384, ECC_NIST_P521, or ECC_SECG_P256K1"
+                            },
+                            {
+                                "name": "enabled",
+                                "type": "bool",
+                                "default": true,
+                                "description": "Specifies whether the key is enabled."
+                            },
+                            {
+                                "name": "policy_file",
+                                "type": "string",
+                                "default": "scripts/kms-policy/kms-policy.json",
+                                "description": "Specifies the file name for kms policy."
+                            },
+                            {
+                                "name": "rotation_enabled",
+                                "type": "bool",
+                                "default": true,
+                                "description": "Specifies whether key rotation is enabled."
+                            },
+                            {
+                                "name": "alias",
+                                "type": "string",
+                                "default": "Storage-kms",
+                                "description": "The display name of the key."
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "default": "us-west-2"
+                            },
+                            {
+                                "name": "kms_alias",
+                                "type": "string",
+                                "default": "",
+                                "description": "The description of the key alias as viewed in AWS console"
+                            }
+                        ],
+                        "version": "v1.1.1",
+                        "outputs": [
+                            {
+                                "name": "key_arn",
+                                "description": "Key ARN"
+                            },
+                            {
+                                "name": "key_id",
+                                "description": "Key ID"
+                            },
+                            {
+                                "name": "alias_arn",
+                                "description": "Alias ARN"
+                            },
+                            {
+                                "name": "alias_name",
+                                "description": "Alias name"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-vpc-subnets",
+                    "alias": "pub_subnets",
+                    "dependencies": [
+                        {
+                            "name": "gateways",
+                            "ref": "igw"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "label",
+                            "value": "public"
+                        },
+                        {
+                            "name": "subnet_cidrs",
+                            "alias": "pub_subnet_cidrs",
+                            "value": [
+                                "10.0.1.0/24",
+                                "10.0.2.0/24",
+                                "10.0.3.0/24"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "aws",
+                                "source": "hashicorp/aws"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "aws-vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gateways",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc-gateways",
+                                        "version": ">= 1.0.0"
+                                    },
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-nat-gateway",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true,
+                                "manualResolution": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Provision Subnet if  true.",
+                                "default": true
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "default": "ap-south-1",
+                                "description": "Please set the region where the resouces to be created "
+                            },
+                            {
+                                "name": "multi-zone",
+                                "type": "bool",
+                                "default": true,
+                                "description": "Create subnets in multiple zones"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe"
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "label to define type of subnet",
+                                "default": "private"
+                            },
+                            {
+                                "name": "gateways",
+                                "type": "list(string)",
+                                "description": "List of gateway ids and zones",
+                                "default": [],
+                                "moduleRef": {
+                                    "id": "gateways",
+                                    "output": "ids"
+                                }
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "(Required) The VPC name.",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "aws-vpc",
+                                    "output": "vpc_name"
+                                }
+                            },
+                            {
+                                "name": "subnet_cidrs",
+                                "type": "list(string)",
+                                "description": "(Required) The CIDR block for the  subnet.",
+                                "default": []
+                            },
+                            {
+                                "name": "availability_zones",
+                                "description": "List of availability zone ids",
+                                "type": "list(string)",
+                                "default": []
+                            },
+                            {
+                                "name": "customer_owned_ipv4_pool",
+                                "type": "string",
+                                "description": "Type of the subnet: Public / Private",
+                                "default": ""
+                            },
+                            {
+                                "name": "map_customer_owned_ip_on_launch",
+                                "type": "string",
+                                "description": "Specify true to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The customer_owned_ipv4_pool and  arguments must be specified when set to true. Default is false.",
+                                "default": "false "
+                            },
+                            {
+                                "name": "map_public_ip_on_launch",
+                                "type": "string",
+                                "description": "(Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is fals",
+                                "default": "false"
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(map(string))",
+                                "default": "[]"
+                            }
+                        ],
+                        "version": "v2.3.0",
+                        "outputs": [
+                            {
+                                "name": "vpc_id"
+                            },
+                            {
+                                "name": "ids"
+                            },
+                            {
+                                "name": "count"
+                            },
+                            {
+                                "name": "route_table_ids"
+                            },
+                            {
+                                "name": "subnet_ids"
+                            },
+                            {
+                                "name": "subnet_count"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-vpc-subnets",
+                    "alias": "pri_subnets",
+                    "dependencies": [
+                        {
+                            "name": "gateways",
+                            "ref": "ngw"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "label",
+                            "value": "private"
+                        },
+                        {
+                            "name": "subnet_cidrs",
+                            "alias": "pri_subnets_cidrs",
+                            "value": [
+                                "10.0.4.0/24",
+                                "10.0.5.0/24",
+                                "10.0.6.0/24"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "aws",
+                                "source": "hashicorp/aws"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "aws-vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gateways",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc-gateways",
+                                        "version": ">= 1.0.0"
+                                    },
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-nat-gateway",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true,
+                                "manualResolution": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Provision Subnet if  true.",
+                                "default": true
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "default": "ap-south-1",
+                                "description": "Please set the region where the resouces to be created "
+                            },
+                            {
+                                "name": "multi-zone",
+                                "type": "bool",
+                                "default": true,
+                                "description": "Create subnets in multiple zones"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe"
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "label to define type of subnet",
+                                "default": "private"
+                            },
+                            {
+                                "name": "gateways",
+                                "type": "list(string)",
+                                "description": "List of gateway ids and zones",
+                                "default": [],
+                                "moduleRef": {
+                                    "id": "gateways",
+                                    "output": "ids"
+                                }
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "(Required) The VPC name.",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "aws-vpc",
+                                    "output": "vpc_name"
+                                }
+                            },
+                            {
+                                "name": "subnet_cidrs",
+                                "type": "list(string)",
+                                "description": "(Required) The CIDR block for the  subnet.",
+                                "default": []
+                            },
+                            {
+                                "name": "availability_zones",
+                                "description": "List of availability zone ids",
+                                "type": "list(string)",
+                                "default": []
+                            },
+                            {
+                                "name": "customer_owned_ipv4_pool",
+                                "type": "string",
+                                "description": "Type of the subnet: Public / Private",
+                                "default": ""
+                            },
+                            {
+                                "name": "map_customer_owned_ip_on_launch",
+                                "type": "string",
+                                "description": "Specify true to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The customer_owned_ipv4_pool and  arguments must be specified when set to true. Default is false.",
+                                "default": "false "
+                            },
+                            {
+                                "name": "map_public_ip_on_launch",
+                                "type": "string",
+                                "description": "(Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is fals",
+                                "default": "false"
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(map(string))",
+                                "default": "[]"
+                            }
+                        ],
+                        "version": "v2.3.0",
+                        "outputs": [
+                            {
+                                "name": "vpc_id"
+                            },
+                            {
+                                "name": "ids"
+                            },
+                            {
+                                "name": "count"
+                            },
+                            {
+                                "name": "route_table_ids"
+                            },
+                            {
+                                "name": "subnet_ids"
+                            },
+                            {
+                                "name": "subnet_count"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-nat-gateway",
+                    "alias": "ngw",
+                    "dependencies": [
+                        {
+                            "name": "aws-vpc-subnets",
+                            "ref": "pub_subnets"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "connectivity_type",
+                            "value": "public"
+                        },
+                        {
+                            "name": "_count",
+                            "value": 3
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "aws",
+                                "source": "hashicorp/aws"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "aws-vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "aws-vpc-subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc-subnets",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the NGW instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group where the VPC is deployed. On AWS this value becomes a tag.",
+                                "default": "default"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag to determine whether to provision Internet gateway or not. Defautl set to true",
+                                "default": true
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "Number of resources to be provisioned",
+                                "default": "0"
+                            },
+                            {
+                                "name": "connectivity_type",
+                                "type": "string",
+                                "description": "(Optional) Connectivity type for the gateway. Valid values are private and public. Defaults to public.",
+                                "default": "public",
+                                "important": true
+                            },
+                            {
+                                "name": "allocation_id",
+                                "type": "string",
+                                "description": "(Optional) The Allocation ID of the Elastic IP address for the gateway. Required for connectivity_type of public",
+                                "default": ""
+                            },
+                            {
+                                "name": "subnet_ids",
+                                "type": "list(string)",
+                                "description": "(Required) The Subnet ID of the subnet in which to place the gateway.  ",
+                                "moduleRef": {
+                                    "id": "aws-vpc-subnets",
+                                    "output": "subnet_ids"
+                                }
+                            }
+                        ],
+                        "version": "v1.1.1",
+                        "outputs": [
+                            {
+                                "name": "ngw_id   "
+                            },
+                            {
+                                "name": "ids  "
+                            },
+                            {
+                                "name": "allocation_id   ",
+                                "description": "The Allocation ID of the Elastic IP address for the gateway."
+                            },
+                            {
+                                "name": "subnet_ids   "
+                            },
+                            {
+                                "name": "network_interface_id    "
+                            },
+                            {
+                                "name": "private_ip    ",
+                                "description": "The private IP address of the NAT Gateway."
+                            },
+                            {
+                                "name": "public_ip    ",
+                                "description": "The public IP address of the NAT Gateway."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "aws-rosa",
+                    "alias": "cluster",
+                    "dependencies": [
+                        {
+                            "name": "public-subnets",
+                            "ref": "pub_subnets"
+                        },
+                        {
+                            "name": "private-subnets",
+                            "ref": "pri_subnets"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "no_of_compute_nodes",
+                            "value": 1
+                        },
+                        {
+                            "name": "multi-zone-cluster",
+                            "alias": "multi-zone",
+                            "scope": "global"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "aws-vpc",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "public-subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc-subnets",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "private-subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-aws-vpc-subnets",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix to be added to the names of resources which are being provisioned",
+                                "default": "swe"
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "default": "",
+                                "description": "Please set the region where the resouces to be created"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "default": "",
+                                "description": "Please set the default resource group with tags"
+                            },
+                            {
+                                "name": "rosa_token",
+                                "type": "string",
+                                "default": "",
+                                "sensitive": true,
+                                "description": "get an offline access token at https://cloud.redhat.com/openshift/token/rosa ",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "dry_run",
+                                "type": "bool",
+                                "description": "Set to true to dry the command just to verify. Else set to false to actually run the cmd",
+                                "default": false
+                            },
+                            {
+                                "name": "existing_vpc",
+                                "type": "bool",
+                                "default": true,
+                                "description": "Flag to identify if VPC already exists. Default set to true. Used to identify to pass the subnet ids to create the ROSA cluster"
+                            },
+                            {
+                                "name": "cluster_name",
+                                "type": "string",
+                                "default": "",
+                                "description": "Name of the RedHat OpenShift Cluster"
+                            },
+                            {
+                                "name": "ocp_version",
+                                "type": "string",
+                                "default": "4.9.15",
+                                "description": "Version of OpenShift that will be used to install the cluster"
+                            },
+                            {
+                                "name": "no_of_compute_nodes",
+                                "type": "number",
+                                "default": "2",
+                                "description": "Number of worker nodes to be provisioned",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "compute-machine-type",
+                                "type": "string",
+                                "default": "m5.xlarge",
+                                "description": "Instance type for the compute nodes. Determines the amount of memory and vCPU allocated to each compute node. Default m5.xlarge",
+                                "scope": "module",
+                                "important": true
+                            },
+                            {
+                                "name": "machine-cidr",
+                                "type": "string",
+                                "default": "",
+                                "description": "ipNet Block of IP addresses used by OpenShift while installing the cluster, for example 10.0.0.0/16 ",
+                                "moduleRef": {
+                                    "id": "aws-vpc",
+                                    "output": "vpc_cidr"
+                                }
+                            },
+                            {
+                                "name": "service-cidr",
+                                "type": "string",
+                                "default": "172.30.0.0/16",
+                                "description": "ipNet Block of IP addresses for services, for example 172.30.0.0/16 "
+                            },
+                            {
+                                "name": "pod-cidr",
+                                "type": "string",
+                                "default": "10.128.0.0/14",
+                                "description": "ipNet Block of IP addresses from which Pod IP addresses are allocated, for example 10.128.0.0/14 "
+                            },
+                            {
+                                "name": "host-prefix",
+                                "type": "number",
+                                "default": "23",
+                                "description": "Subnet prefix length to assign to each individual node. For example, if host prefix is set to 23, then each node is assigned a /23 subnet out of the given CIDR."
+                            },
+                            {
+                                "name": "etcd-encryption",
+                                "type": "string",
+                                "default": "",
+                                "description": "Add etcd encryption. By default etcd data is encrypted at rest. This option configures etcd encryption on top of existing storage encryption."
+                            },
+                            {
+                                "name": "subnet_ids",
+                                "type": "list(string)",
+                                "description": "To create cluster in existing VPC, public and private Subnet ids should be given .",
+                                "default": [
+                                    ""
+                                ]
+                            },
+                            {
+                                "name": "public_subnet_ids",
+                                "type": "list(string)",
+                                "description": "To create cluster in existing VPC, public and private Subnet ids should be given .",
+                                "default": [],
+                                "moduleRef": {
+                                    "id": "public-subnets",
+                                    "output": "subnet_ids"
+                                }
+                            },
+                            {
+                                "name": "private_subnet_ids",
+                                "type": "list(string)",
+                                "description": "To create cluster in existing VPC, public and private Subnet ids should be given .",
+                                "default": [],
+                                "moduleRef": {
+                                    "id": "private-subnets",
+                                    "output": "subnet_ids"
+                                }
+                            },
+                            {
+                                "name": "multi-zone-cluster",
+                                "type": "bool",
+                                "default": false,
+                                "description": " Deploy to multiple data centers"
+                            },
+                            {
+                                "name": "private-link",
+                                "type": "bool",
+                                "default": false,
+                                "description": "Provides private connectivity between VPCs, AWS services, and your on-premises networks, without exposing your traffic to the public internet"
+                            }
+                        ],
+                        "version": "v1.4.0",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "ID of the cluster."
+                            },
+                            {
+                                "name": "name",
+                                "description": "Name of the cluster."
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Name of the resource group containing the cluster."
+                            },
+                            {
+                                "name": "region",
+                                "description": "Region containing the cluster."
+                            },
+                            {
+                                "name": "server_url",
+                                "description": "The url used to connect to the api server. If the cluster has public endpoints enabled this will be the public api server, otherwise this will be the private api server url"
+                            },
+                            {
+                                "name": "console_url",
+                                "description": "The url of the OCP console. "
+                            },
+                            {
+                                "name": "platform",
+                                "type": {
+                                    "lines": [
+                                        "local.cluster_type"
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "config_file_path",
+                                "description": "Path to the config file for the cluster."
+                            },
+                            {
+                                "name": "token",
+                                "description": "The admin user token used to generate the cluster"
+                            },
+                            {
+                                "name": "username",
+                                "description": "The username of the admin user for the cluster"
+                            },
+                            {
+                                "name": "password",
+                                "description": "The password of the admin user for the cluster"
+                            },
+                            {
+                                "name": "domainname",
+                                "description": "The domain name  for the cluster"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "variables": [
+                {
+                    "name": "name_prefix",
+                    "scope": "global",
+                    "value": "sw-bom9",
+                    "important": true
+                },
+                {
+                    "name": "provision",
+                    "value": true,
+                    "scope": "global"
+                },
+                {
+                    "name": "resource_group_name",
+                    "scope": "global"
+                },
+                {
+                    "name": "region",
+                    "value": "ap-south-1",
+                    "scope": "global"
+                },
+                {
+                    "name": "multi-zone",
+                    "value": true,
+                    "scope": "global",
+                    "important": true
+                },
+                {
+                    "name": "rosa_token",
+                    "scope": "global",
+                    "important": true
+                }
+            ]
+        }
+    }
+}
