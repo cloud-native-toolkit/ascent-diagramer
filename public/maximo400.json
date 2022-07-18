@@ -1,0 +1,2034 @@
+{
+    "bom": {
+        "apiVersion": "cloud.ibm.com/v1alpha1",
+        "kind": "BillOfMaterial",
+        "metadata": {
+            "name": "400-mas-core-multicloud",
+            "labels": {
+                "type": "software",
+                "code": "400"
+            },
+            "annotations": {
+                "displayName": "Maximo Application Suite Core",
+                "description": "GitOps deployment of Maximo Application Suite Core for OpenShift",
+                "deployment-type/gitops": "true"
+            }
+        },
+        "spec": {
+            "modules": [
+                {
+                    "name": "ocp-login",
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "dependencies": [],
+                        "variables": [
+                            {
+                                "name": "server_url",
+                                "type": "string",
+                                "description": "The url for the OpenShift api",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "login_user",
+                                "type": "string",
+                                "description": "Username for login",
+                                "default": ""
+                            },
+                            {
+                                "name": "login_password",
+                                "type": "string",
+                                "description": "Password for login",
+                                "default": "",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "login_token",
+                                "type": "string",
+                                "description": "Token used for authentication",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "skip",
+                                "type": "bool",
+                                "description": "Flag indicating that the cluster login has already been performed",
+                                "default": false
+                            },
+                            {
+                                "name": "cluster_version",
+                                "type": "string",
+                                "description": "[Deprecated] The version of the cluster (passed through to the output)",
+                                "default": ""
+                            },
+                            {
+                                "name": "ingress_subdomain",
+                                "type": "string",
+                                "description": "[Deprecated] The ingress subdomain of the cluster (passed through to the output)",
+                                "default": ""
+                            },
+                            {
+                                "name": "tls_secret_name",
+                                "type": "string",
+                                "description": "[Deprecated] The name of the secret containing the tls certificates for the ingress subdomain (passed through to the output)",
+                                "default": ""
+                            },
+                            {
+                                "name": "ca_cert",
+                                "type": "string",
+                                "description": "The base64 encoded ca certificate",
+                                "default": ""
+                            },
+                            {
+                                "name": "ca_cert_file",
+                                "type": "string",
+                                "description": "The path to the file that contains the ca certificate",
+                                "default": ""
+                            }
+                        ],
+                        "version": "v1.4.2",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "ID of the cluster."
+                            },
+                            {
+                                "name": "name",
+                                "description": "Name of the cluster"
+                            },
+                            {
+                                "name": "region",
+                                "description": "Region of the cluster"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Resource group of the cluster"
+                            },
+                            {
+                                "name": "server_url",
+                                "description": "The url of the control server."
+                            },
+                            {
+                                "name": "username",
+                                "description": "The username of the control server."
+                            },
+                            {
+                                "name": "password",
+                                "description": "The password of the control server.",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "token",
+                                "description": "The token of the control server.",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "config_file_path",
+                                "description": "Path to the config file for the cluster."
+                            },
+                            {
+                                "name": "platform",
+                                "type": {
+                                    "lines": [
+                                        "\"openshift\""
+                                    ]
+                                },
+                                "description": "Configuration values for the cluster platform"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-namespace",
+                    "alias": "gitea_namespace",
+                    "variables": [
+                        {
+                            "name": "name",
+                            "value": "gitea"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The value that should be used for the namespace"
+                            },
+                            {
+                                "name": "ci",
+                                "type": "bool",
+                                "description": "Flag indicating that this namespace will be used for development (e.g. configmaps and secrets)",
+                                "default": false
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "create_operator_group",
+                                "type": "bool",
+                                "description": "Flag indicating that an operator group should be created in the namespace",
+                                "default": true
+                            },
+                            {
+                                "name": "argocd_namespace",
+                                "type": "string",
+                                "description": "The namespace where argocd has been deployed",
+                                "default": "openshift-gitops"
+                            }
+                        ],
+                        "version": "v1.11.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Namespace name"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitea",
+                    "dependencies": [
+                        {
+                            "id": "namespace",
+                            "ref": "gitea_namespace"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "cluster",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#cluster"
+                            },
+                            {
+                                "id": "olm",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-k8s-olm",
+                                        "version": ">= 1.2.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "namespace",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-k8s-namespace",
+                                        "version": ">= 2.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "cluster_config_file",
+                                "type": "string",
+                                "description": "Cluster config file for Kubernetes cluster.",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "config_file_path"
+                                }
+                            },
+                            {
+                                "name": "cluster_type",
+                                "type": "string",
+                                "description": "The type of cluster (openshift or kubernetes)",
+                                "default": "ocp4",
+                                "moduleRef": {
+                                    "id": "cluster",
+                                    "output": "platform.type_code"
+                                }
+                            },
+                            {
+                                "name": "olm_namespace",
+                                "type": "string",
+                                "description": "Namespace where olm is installed",
+                                "default": "openshift-marketplace",
+                                "moduleRef": {
+                                    "id": "olm",
+                                    "output": "olm_namespace"
+                                }
+                            },
+                            {
+                                "name": "operator_namespace",
+                                "type": "string",
+                                "description": "Namespace where operators will be installed",
+                                "default": "openshift-operators",
+                                "moduleRef": {
+                                    "id": "olm",
+                                    "output": "target_namespace"
+                                }
+                            },
+                            {
+                                "name": "instance_namespace",
+                                "type": "string",
+                                "description": "Namespace where instance will be installed",
+                                "default": "tools",
+                                "moduleRef": {
+                                    "id": "namespace",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "instance_name",
+                                "type": "string",
+                                "description": "The name for the instance",
+                                "default": "gitea"
+                            },
+                            {
+                                "name": "username",
+                                "type": "string",
+                                "description": "The username for the instance",
+                                "default": "gitea-admin"
+                            },
+                            {
+                                "name": "password",
+                                "type": "string",
+                                "description": "The password for the instance",
+                                "default": ""
+                            }
+                        ],
+                        "version": "v0.4.1",
+                        "outputs": [
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the Gitea instance has been provisioned"
+                            },
+                            {
+                                "name": "username",
+                                "description": "The username of the Gitea admin user"
+                            },
+                            {
+                                "name": "password",
+                                "description": "The password of the Gitea admin user",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "token",
+                                "description": "The api token of the Gitea admin user",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "host",
+                                "description": "The host name of the gitea server"
+                            },
+                            {
+                                "name": "org",
+                                "description": "The host name of the gitea server"
+                            },
+                            {
+                                "name": "ingress_host",
+                                "description": "The host name of the gitea server"
+                            },
+                            {
+                                "name": "ingress_url",
+                                "description": "The url of the gitea server"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-repo",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "cert",
+                                "optional": true,
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-util-sealed-secret-cert",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "gitea",
+                                "optional": true,
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitea",
+                                        "version": ">= 0.3.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "host",
+                                "type": "string",
+                                "description": "The host for the git repository. The git host used can be a GitHub, GitHub Enterprise, Gitlab, Bitbucket, Gitea or Azure DevOps server. If the host is null assumes in-cluster Gitea instance will be used.",
+                                "default": "",
+                                "important": true
+                            },
+                            {
+                                "name": "type",
+                                "type": "string",
+                                "description": "[Deprecated] The type of the hosted git repository.",
+                                "default": ""
+                            },
+                            {
+                                "name": "org",
+                                "type": "string",
+                                "description": "The org/group where the git repository exists/will be provisioned. If the value is left blank then the username org will be used.",
+                                "default": "",
+                                "important": true
+                            },
+                            {
+                                "name": "project",
+                                "type": "string",
+                                "description": "The project that will be used for the git repo. (Primarily used for Azure DevOps repos)",
+                                "default": "",
+                                "important": true
+                            },
+                            {
+                                "name": "username",
+                                "type": "string",
+                                "description": "The username of the user with access to the repository",
+                                "default": "",
+                                "important": true
+                            },
+                            {
+                                "name": "token",
+                                "type": "string",
+                                "description": "The personal access token used to access the repository",
+                                "sensitive": true,
+                                "default": "",
+                                "important": true
+                            },
+                            {
+                                "name": "gitea_host",
+                                "type": "string",
+                                "description": "The host for the default gitea repository.",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitea",
+                                    "output": "host"
+                                }
+                            },
+                            {
+                                "name": "gitea_org",
+                                "type": "string",
+                                "description": "The org/group for the default gitea repository. If not provided, the value will default to the username org",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitea",
+                                    "output": "org"
+                                }
+                            },
+                            {
+                                "name": "gitea_username",
+                                "type": "string",
+                                "description": "The username of the default gitea repository",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitea",
+                                    "output": "username"
+                                }
+                            },
+                            {
+                                "name": "gitea_token",
+                                "type": "string",
+                                "description": "The personal access token used to access the repository",
+                                "sensitive": true,
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitea",
+                                    "output": "token"
+                                }
+                            },
+                            {
+                                "name": "repo",
+                                "type": "string",
+                                "description": "The short name of the repository (i.e. the part after the org/group name)"
+                            },
+                            {
+                                "name": "branch",
+                                "type": "string",
+                                "description": "The name of the branch that will be used. If the repo already exists (provision=false) then it is assumed this branch already exists as well",
+                                "default": "main"
+                            },
+                            {
+                                "name": "public",
+                                "type": "bool",
+                                "description": "Flag indicating that the repo should be public or private",
+                                "default": false
+                            },
+                            {
+                                "name": "gitops_namespace",
+                                "type": "string",
+                                "description": "The namespace where ArgoCD is running in the cluster",
+                                "default": "openshift-gitops"
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the cluster that will be configured via gitops. This is used to separate the config by cluster",
+                                "default": "default"
+                            },
+                            {
+                                "name": "sealed_secrets_cert",
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "cert",
+                                    "output": "cert"
+                                }
+                            },
+                            {
+                                "name": "strict",
+                                "type": "bool",
+                                "description": "Flag indicating that an error should be thrown if the repo already exists",
+                                "default": false
+                            },
+                            {
+                                "name": "debug",
+                                "type": "bool",
+                                "description": "Flag indicating that debug loggging should be enabled",
+                                "default": false,
+                                "scope": "global"
+                            }
+                        ],
+                        "version": "v1.20.5",
+                        "outputs": [
+                            {
+                                "name": "config_host",
+                                "description": "The host name of the bootstrap git repo"
+                            },
+                            {
+                                "name": "config_org",
+                                "description": "The org name of the bootstrap git repo"
+                            },
+                            {
+                                "name": "config_name",
+                                "description": "The repo name of the bootstrap git repo"
+                            },
+                            {
+                                "name": "config_project",
+                                "description": "The project name of the bootstrap git repo (for Azure DevOps)"
+                            },
+                            {
+                                "name": "config_repo",
+                                "description": "The repo that contains the argocd configuration"
+                            },
+                            {
+                                "name": "config_repo_url",
+                                "description": "The repo that contains the argocd configuration"
+                            },
+                            {
+                                "name": "config_username",
+                                "description": "The username for the config repo"
+                            },
+                            {
+                                "name": "config_token",
+                                "description": "The token for the config repo",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "config_paths",
+                                "description": "The paths in the config repo"
+                            },
+                            {
+                                "name": "config_projects",
+                                "description": "The ArgoCD projects for the different layers of the repo"
+                            },
+                            {
+                                "name": "bootstrap_path",
+                                "description": "The path to the bootstrap configuration"
+                            },
+                            {
+                                "name": "bootstrap_branch",
+                                "description": "The branch in the gitrepo containing the bootstrap configuration"
+                            },
+                            {
+                                "name": "application_repo",
+                                "description": "The repo that contains the application configuration"
+                            },
+                            {
+                                "name": "application_repo_url",
+                                "description": "The repo that contains the application configuration"
+                            },
+                            {
+                                "name": "application_username",
+                                "description": "The username for the application repo"
+                            },
+                            {
+                                "name": "application_token",
+                                "description": "The token for the application repo",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "application_paths",
+                                "description": "The paths in the application repo"
+                            },
+                            {
+                                "name": "gitops_config",
+                                "description": "Config information regarding the gitops repo structure"
+                            },
+                            {
+                                "name": "git_credentials",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The name of the cluster that will be configured for gitops"
+                            },
+                            {
+                                "name": "sealed_secrets_cert",
+                                "description": "The certificate used to encrypt sealed secrets"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-cp-catalogs",
+                    "version": "v1.2.1",
+                    "variables": [
+                        {
+                            "name": "entitlement_key",
+                            "scope": "global"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "namespace",
+                                "type": "string",
+                                "description": "The namespace where the application should be deployed",
+                                "default": "openshift-marketplace"
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                }
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "entitlement_key",
+                                "type": "string",
+                                "description": "The entitlement key used to access the CP4I images in the container registry. Visit https://myibm.ibm.com/products-services/containerlibrary to get the key",
+                                "sensitive": true
+                            }
+                        ],
+                        "version": "v1.2.4",
+                        "outputs": [
+                            {
+                                "name": "catalog_ibmoperators",
+                                "description": "IBM Operator Catalog name"
+                            },
+                            {
+                                "name": "catalog_commonservices",
+                                "description": "IBMCS Operators catalog name"
+                            },
+                            {
+                                "name": "catalog_automationfoundation",
+                                "description": "IAF Core Operators catalog name"
+                            },
+                            {
+                                "name": "catalog_processmining",
+                                "description": "IBM ProcessMining Operators catalog name"
+                            },
+                            {
+                                "name": "entitlement_key",
+                                "description": "Entitlement key"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-namespace",
+                    "alias": "sls-namespace",
+                    "variables": [
+                        {
+                            "name": "name",
+                            "value": "ibm-sls"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The value that should be used for the namespace"
+                            },
+                            {
+                                "name": "ci",
+                                "type": "bool",
+                                "description": "Flag indicating that this namespace will be used for development (e.g. configmaps and secrets)",
+                                "default": false
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "create_operator_group",
+                                "type": "bool",
+                                "description": "Flag indicating that an operator group should be created in the namespace",
+                                "default": true
+                            },
+                            {
+                                "name": "argocd_namespace",
+                                "type": "string",
+                                "description": "The namespace where argocd has been deployed",
+                                "default": "openshift-gitops"
+                            }
+                        ],
+                        "version": "v1.11.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Namespace name"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-cp-sls",
+                    "dependencies": [
+                        {
+                            "name": "namespace",
+                            "ref": "sls-namespace"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "cluster_ingress",
+                            "scope": "global"
+                        },
+                        {
+                            "name": "entitlement_key",
+                            "scope": "global"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "providers": [
+                            {
+                                "name": "gitops",
+                                "source": "cloud-native-toolkit/gitops"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "catalogs",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-cp-catalogs.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "namespace",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-namespace.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mongodb",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-mongo-ce.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                },
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure"
+                            },
+                            {
+                                "name": "git_credentials",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                },
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)"
+                            },
+                            {
+                                "name": "server_name",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                },
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "optional": true
+                            },
+                            {
+                                "name": "namespace",
+                                "moduleRef": {
+                                    "id": "namespace",
+                                    "output": "name"
+                                },
+                                "type": "string",
+                                "description": "The namespace where the application should be deployed",
+                                "default": "ibm-sls",
+                                "optional": true
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                },
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "catalog",
+                                "moduleRef": {
+                                    "id": "catalogs",
+                                    "output": "catalog_ibmoperators"
+                                },
+                                "type": "string",
+                                "description": "The catalog source that should be used to deploy the operator",
+                                "default": "ibm-operator-catalog",
+                                "optional": true
+                            },
+                            {
+                                "name": "mongo_userid",
+                                "moduleRef": {
+                                    "id": "mongodb",
+                                    "output": "username"
+                                },
+                                "type": "string",
+                                "description": "mongodb admin userid, should stay admin in most cases\n  sensitive   = true",
+                                "default": "admin",
+                                "optional": true
+                            },
+                            {
+                                "name": "mongo_dbpass",
+                                "moduleRef": {
+                                    "id": "mongodb",
+                                    "output": "password"
+                                },
+                                "type": "string",
+                                "description": "mongodb password\n  sensitive   = true"
+                            },
+                            {
+                                "name": "mongo_namespace",
+                                "moduleRef": {
+                                    "id": "mongodb",
+                                    "output": "namespace"
+                                },
+                                "type": "string",
+                                "description": "namespace for mongo"
+                            },
+                            {
+                                "name": "mongo_port",
+                                "moduleRef": {
+                                    "id": "mongodb",
+                                    "output": "port"
+                                },
+                                "type": "string",
+                                "description": "The port used by the the mongo instance"
+                            },
+                            {
+                                "name": "mongo_svcname",
+                                "moduleRef": {
+                                    "id": "mongodb",
+                                    "output": "svcname"
+                                },
+                                "type": "string",
+                                "description": "service name for mongo"
+                            },
+                            {
+                                "name": "cluster_ingress",
+                                "type": "string",
+                                "description": "Ingress for cluster"
+                            },
+                            {
+                                "name": "catalog_namespace",
+                                "type": "string",
+                                "description": "The namespace where the catalog has been deployed",
+                                "default": "openshift-marketplace",
+                                "optional": true
+                            },
+                            {
+                                "name": "channel",
+                                "type": "string",
+                                "description": "The channel that should be used to deploy the operator",
+                                "default": "3.x",
+                                "optional": true
+                            },
+                            {
+                                "name": "entitlement_key",
+                                "type": "string",
+                                "description": "IBM entitlement key for MAS"
+                            }
+                        ],
+                        "version": "v2.3.3",
+                        "outputs": [
+                            {
+                                "name": "instance_name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "operator_name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "branch",
+                                "description": "The branch where the module config has been placed"
+                            },
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the module will be deployed"
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The server where the module will be deployed"
+                            },
+                            {
+                                "name": "layer",
+                                "description": "The layer where the module is deployed"
+                            },
+                            {
+                                "name": "instance_type",
+                                "description": "The type of module where the module is deployed"
+                            },
+                            {
+                                "name": "operator_type",
+                                "description": "The type of module where the module is deployed"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "util-storage-class-manager",
+                    "variables": [
+                        {
+                            "name": "rwx_storage_class",
+                            "scope": "global"
+                        },
+                        {
+                            "name": "rwo_storage_class",
+                            "scope": "global"
+                        },
+                        {
+                            "name": "file_storage_class",
+                            "scope": "global"
+                        },
+                        {
+                            "name": "block_storage_class",
+                            "scope": "global"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [],
+                        "variables": [
+                            {
+                                "name": "rwx_storage_class",
+                                "type": "string",
+                                "description": "The storage class to use for Read-Write-Many volumes"
+                            },
+                            {
+                                "name": "rwo_storage_class",
+                                "type": "string",
+                                "description": "The storage class to use for Read-Write-One volumes"
+                            },
+                            {
+                                "name": "file_storage_class",
+                                "type": "string",
+                                "description": "The storage class to use for File storage volumes"
+                            },
+                            {
+                                "name": "block_storage_class",
+                                "type": "string",
+                                "description": "The storage class to use for Block storage volumes"
+                            }
+                        ],
+                        "version": "v1.0.2",
+                        "outputs": [
+                            {
+                                "name": "rwx_storage_class",
+                                "description": "The storage class to use for Read-Write-Many volumes"
+                            },
+                            {
+                                "name": "rwo_storage_class",
+                                "description": "The storage class to use for Read-Write-One volumes"
+                            },
+                            {
+                                "name": "file_storage_class",
+                                "description": "The storage class to use for File storage volumes"
+                            },
+                            {
+                                "name": "block_storage_class",
+                                "description": "The storage class to use for Block storage volumess"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-namespace",
+                    "alias": "mongo-namespace",
+                    "variables": [
+                        {
+                            "name": "name",
+                            "value": "mongo"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The value that should be used for the namespace"
+                            },
+                            {
+                                "name": "ci",
+                                "type": "bool",
+                                "description": "Flag indicating that this namespace will be used for development (e.g. configmaps and secrets)",
+                                "default": false
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "create_operator_group",
+                                "type": "bool",
+                                "description": "Flag indicating that an operator group should be created in the namespace",
+                                "default": true
+                            },
+                            {
+                                "name": "argocd_namespace",
+                                "type": "string",
+                                "description": "The namespace where argocd has been deployed",
+                                "default": "openshift-gitops"
+                            }
+                        ],
+                        "version": "v1.11.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Namespace name"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-mongo-ce-operator",
+                    "dependencies": [
+                        {
+                            "name": "namespace",
+                            "ref": "mongo-namespace"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "kubernetes",
+                            "ocp3",
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "namespace",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-namespace.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "namespace",
+                                "type": "string",
+                                "description": "The namespace where the mongo-ce should be deployed",
+                                "default": "mongo",
+                                "moduleRef": {
+                                    "id": "namespace",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                }
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "mongo_serviceaccount",
+                                "type": "string",
+                                "description": "Name of the service account to use for mongo",
+                                "default": "mongodb-kubernetes-operator"
+                            }
+                        ],
+                        "version": "v1.0.6",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "branch",
+                                "description": "The branch where the module config has been placed"
+                            },
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the module will be deployed"
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The server where the module will be deployed"
+                            },
+                            {
+                                "name": "layer",
+                                "description": "The layer where the module is deployed"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of module where the module is deployed"
+                            },
+                            {
+                                "name": "mongo_sa",
+                                "description": "Name of the service account to use for mongo"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-mongo-ce",
+                    "dependencies": [
+                        {
+                            "name": "namespace",
+                            "ref": "mongo-namespace"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "kubernetes",
+                            "ocp3",
+                            "ocp4"
+                        ],
+                        "providers": [
+                            {
+                                "name": "gitops",
+                                "source": "cloud-native-toolkit/gitops"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mongo-operator",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-mongo-ce-operator",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sc-manager",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-util-storage-class-manager.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "namespace",
+                                "type": "string",
+                                "description": "The namespace where the application should be deployed",
+                                "moduleRef": {
+                                    "id": "mongo-operator",
+                                    "output": "namespace"
+                                }
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                }
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "password",
+                                "type": "string",
+                                "description": "The database password",
+                                "default": "password"
+                            },
+                            {
+                                "name": "storage_class_name",
+                                "type": "string",
+                                "description": "The storage class to use for database",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "block_storage_class"
+                                }
+                            },
+                            {
+                                "name": "port",
+                                "type": "string",
+                                "description": "The port to use for database",
+                                "default": "27017"
+                            },
+                            {
+                                "name": "mongo_version",
+                                "type": "string",
+                                "description": "version for mongodb to be installed",
+                                "default": "4.2.6"
+                            },
+                            {
+                                "name": "replicaset_count",
+                                "type": "string",
+                                "description": "No of pods to be created as part of replicaset",
+                                "default": "3"
+                            },
+                            {
+                                "name": "service_name",
+                                "type": "string",
+                                "description": "Mongo svcname",
+                                "default": "mongo-ce"
+                            }
+                        ],
+                        "version": "v1.2.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "branch",
+                                "description": "The branch where the module config has been placed"
+                            },
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the module will be deployed"
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The server where the module will be deployed"
+                            },
+                            {
+                                "name": "layer",
+                                "description": "The layer where the module is deployed"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of module where the module is deployed"
+                            },
+                            {
+                                "name": "username",
+                                "description": "mongo admin user"
+                            },
+                            {
+                                "name": "password",
+                                "description": "mongo admin password"
+                            },
+                            {
+                                "name": "port",
+                                "description": "mongo admin pw",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "svcname",
+                                "description": "mongo service name",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "replicaset_count",
+                                "description": "Count of replicaset count",
+                                "sensitive": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-namespace",
+                    "alias": "bas-namespace",
+                    "variables": [
+                        {
+                            "name": "name",
+                            "value": "masbas"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The value that should be used for the namespace"
+                            },
+                            {
+                                "name": "ci",
+                                "type": "bool",
+                                "description": "Flag indicating that this namespace will be used for development (e.g. configmaps and secrets)",
+                                "default": false
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "create_operator_group",
+                                "type": "bool",
+                                "description": "Flag indicating that an operator group should be created in the namespace",
+                                "default": true
+                            },
+                            {
+                                "name": "argocd_namespace",
+                                "type": "string",
+                                "description": "The namespace where argocd has been deployed",
+                                "default": "openshift-gitops"
+                            }
+                        ],
+                        "version": "v1.11.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Namespace name"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-cp-bas",
+                    "dependencies": [
+                        {
+                            "name": "namespace",
+                            "ref": "bas-namespace"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "kubernetes",
+                            "ocp3",
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "namespace",
+                                "discriminator": "ibm-bas",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-namespace.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sc-manager",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-util-storage-class-manager.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                }
+                            },
+                            {
+                                "name": "git_credentials",
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)",
+                                "sensitive": true,
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                }
+                            },
+                            {
+                                "name": "namespace",
+                                "type": "string",
+                                "description": "The namespace where the application should be deployed",
+                                "default": "masbas",
+                                "moduleRef": {
+                                    "id": "namespace",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                }
+                            },
+                            {
+                                "name": "server_name",
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                }
+                            },
+                            {
+                                "name": "dbuser",
+                                "type": "string",
+                                "description": "The (mongodb) database user",
+                                "default": "dbuser"
+                            },
+                            {
+                                "name": "dbpassword",
+                                "type": "string",
+                                "description": "The value that will be used for the mongodb database password. If not provided, a random value will be generated.",
+                                "sensitive": true,
+                                "default": ""
+                            },
+                            {
+                                "name": "grafanauser",
+                                "type": "string",
+                                "description": "The grafana user",
+                                "default": "gfuser"
+                            },
+                            {
+                                "name": "grafanapassword",
+                                "type": "string",
+                                "description": "The value that will be used for the grafana password. If not provided, a random value will be generated.",
+                                "sensitive": true,
+                                "default": ""
+                            },
+                            {
+                                "name": "default_storage_class",
+                                "type": "string",
+                                "description": "The default storage class for the resources",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "rwo_storage_class"
+                                }
+                            },
+                            {
+                                "name": "db_archive_storage_class",
+                                "type": "string",
+                                "description": "Storage class for the db_archive resource",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "rwx_storage_class"
+                                }
+                            },
+                            {
+                                "name": "postgres_storage_class",
+                                "type": "string",
+                                "description": "Storage class for the postgres resource",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "rwo_storage_class"
+                                }
+                            },
+                            {
+                                "name": "kafka_storage_class",
+                                "type": "string",
+                                "description": "Storage class for the kafka resource",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "rwo_storage_class"
+                                }
+                            },
+                            {
+                                "name": "zookeeper_storage_class",
+                                "type": "string",
+                                "description": "Storage class for the zookeeper resource",
+                                "moduleRef": {
+                                    "id": "sc-manager",
+                                    "output": "rwo_storage_class"
+                                }
+                            }
+                        ],
+                        "version": "v1.1.1",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "branch",
+                                "description": "The branch where the module config has been placed"
+                            },
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the module will be deployed"
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The server where the module will be deployed"
+                            },
+                            {
+                                "name": "layer",
+                                "description": "The layer where the module is deployed"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of module where the module is deployed"
+                            },
+                            {
+                                "name": "dbpassword",
+                                "description": "The value that will be used for the mongodb database password. If not provided, a random value will be generated.",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "grafanapassword",
+                                "description": "The value that will be used for the grafana password. If not provided, a random value will be generated.",
+                                "sensitive": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "gitops-cp-maximo",
+                    "variables": [
+                        {
+                            "name": "instanceid",
+                            "ref": "mas8"
+                        },
+                        {
+                            "name": "cluster_ingress",
+                            "scope": "global"
+                        },
+                        {
+                            "name": "entitlement_key",
+                            "scope": "global"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "gitops",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-tools-gitops.git",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "catalog",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-cp-catalogs.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mongo-operator",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-mongo-ce-operator.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "mongo",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-mongo-ce.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sls",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-cp-sls.git",
+                                        "version": ">= 2.3.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "bas",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-gitops-cp-bas.git",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "gitops_config",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "gitops_config"
+                                },
+                                "type": "object({\n    boostrap = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    infrastructure = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    services = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n    applications = object({\n      argocd-config = object({\n        project = string\n        repo = string\n        url = string\n        path = string\n      })\n      payload = object({\n        repo = string\n        url = string\n        path = string\n      })\n    })\n  })",
+                                "description": "Config information regarding the gitops repo structure"
+                            },
+                            {
+                                "name": "git_credentials",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "git_credentials"
+                                },
+                                "type": "list(object({\n    repo = string\n    url = string\n    username = string\n    token = string\n  }))",
+                                "description": "The credentials for the gitops repo(s)"
+                            },
+                            {
+                                "name": "server_name",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "server_name"
+                                },
+                                "type": "string",
+                                "description": "The name of the server",
+                                "default": "default",
+                                "optional": true
+                            },
+                            {
+                                "name": "kubeseal_cert",
+                                "moduleRef": {
+                                    "id": "gitops",
+                                    "output": "sealed_secrets_cert"
+                                },
+                                "type": "string",
+                                "description": "The certificate/public key used to encrypt the sealed secrets",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "catalog_name",
+                                "moduleRef": {
+                                    "id": "catalog",
+                                    "output": "catalog_ibmoperators"
+                                },
+                                "type": "string",
+                                "description": "App catalog source",
+                                "default": "ibm-operator-catalog",
+                                "optional": true
+                            },
+                            {
+                                "name": "entitlement_key",
+                                "type": "string",
+                                "description": "IBM entitlement key for MAS"
+                            },
+                            {
+                                "name": "cluster_ingress",
+                                "type": "string",
+                                "description": "Ingress for cluster"
+                            },
+                            {
+                                "name": "instanceid",
+                                "type": "string",
+                                "description": "instance name for to use for MAS Suite",
+                                "default": "masapps",
+                                "optional": true
+                            },
+                            {
+                                "name": "versionid",
+                                "type": "string",
+                                "description": "version for MAS - this must match the update channel: 8.x for latest",
+                                "default": "8.x",
+                                "optional": true
+                            },
+                            {
+                                "name": "installPlan",
+                                "type": "string",
+                                "description": "Install Plan for App",
+                                "default": "Automatic",
+                                "optional": true
+                            },
+                            {
+                                "name": "catalog_namespace",
+                                "type": "string",
+                                "description": "Catalog source namespace",
+                                "default": "openshift-marketplace",
+                                "optional": true
+                            },
+                            {
+                                "name": "certmgr_namespace",
+                                "type": "string",
+                                "description": "Namespace of the cert-manager: should stay default value unless using another cert manager",
+                                "default": "ibm-common-services",
+                                "optional": true
+                            },
+                            {
+                                "name": "issuer_name",
+                                "type": "string",
+                                "description": "Certificate Issuer name on the cluster to use if not using self signed certs",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "issuer_duration",
+                                "type": "string",
+                                "description": "Certificate duration to use if not using self signed certs - Example: 8760h0m0s",
+                                "default": "",
+                                "optional": true
+                            },
+                            {
+                                "name": "issuer_renewbefore",
+                                "type": "string",
+                                "description": "Certificate renew before definion to use if not using self signed certs - Example: 720h0m0s",
+                                "default": "",
+                                "optional": true
+                            }
+                        ],
+                        "version": "v1.3.2",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the module"
+                            },
+                            {
+                                "name": "branch",
+                                "description": "The branch where the module config has been placed"
+                            },
+                            {
+                                "name": "namespace",
+                                "description": "The namespace where the module will be deployed"
+                            },
+                            {
+                                "name": "server_name",
+                                "description": "The server where the module will be deployed"
+                            },
+                            {
+                                "name": "layer",
+                                "description": "The layer where the module is deployed"
+                            },
+                            {
+                                "name": "type",
+                                "description": "The type of module where the module is deployed"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

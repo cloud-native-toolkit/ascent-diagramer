@@ -26,7 +26,21 @@ paths:
   /diagram:
     get:
       operationId: get
-      description: Get diagram from BOM definition
+      description: Get infrastructure diagram from BOM definition
+      responses:
+        200:
+          description: "Diagram Image"
+          schema:
+            type: "file"
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+  /software:
+    get:
+      operationId: get
+      description: Get software diagram from BOM definition
       responses:
         200:
           description: "Diagram Image"

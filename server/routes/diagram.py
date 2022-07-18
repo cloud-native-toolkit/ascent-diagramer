@@ -39,7 +39,8 @@ from diagrams.ibm.storage import ObjectStorage, FileStorage
 
 
 # change type of diagram here via json file name i.e. 'ibm-production' or 'ibm-quickstart'
-type = "azure-quickstart"
+# right now it's important to name file "[platform]-[infratype]" so the type and pform are correct
+type = "aws-quickstart"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
