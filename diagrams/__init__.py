@@ -44,7 +44,7 @@ class Diagram:
 
     # fmt: off
     _default_graph_attrs = {
-        "pad": "3.0",
+        "pad": "1.0",
         "splines": "ortho",
         "nodesep": "0.60",
         "ranksep": "0.75",

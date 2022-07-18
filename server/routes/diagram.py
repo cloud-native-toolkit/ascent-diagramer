@@ -14,23 +14,32 @@ from urllib.request import urlretrieve
 from flask import send_file
 from server import app
 
-from diagrams.aws.compute import ECS, EKS, Lambda, EC2
-from diagrams.aws.database import Redshift
-from diagrams.aws.integration import SQS
-from diagrams.aws.storage import S3
-from diagrams.aws.security import KMS
-from diagrams.aws.analytics import Redshift
 
+from diagrams.aws.analytics import Redshift
+from diagrams.aws.compute import EC2
+from diagrams.aws.database import Redshift
+from diagrams.aws.general import Users, InternetAlt1
+from diagrams.aws.network import ClientVpn, ALB
+from diagrams.aws.security import KMS
+
+from diagrams.azure.analytics import LogAnalyticsWorkspaces, AnalysisServices
+from diagrams.azure.compute import SpringCloud
+from diagrams.azure.database import BlobStorage
+from diagrams.azure.general import Usericon
+from diagrams.azure.iot import Sphere
+from diagrams.azure.network import LoadBalancers, ApplicationGateway, Subnets as Azsubnets, VirtualNetworks, VirtualNetworkGateways, RouteTables, DNSZones
+from diagrams.azure.security import KeyVaults
+
+from diagrams.ibm.compute import PowerSystems
 from diagrams.ibm.general import *
 from diagrams.ibm.logging import *
-from diagrams.ibm.storage import ObjectStorage, FileStorage
 from diagrams.ibm.network import *
-from diagrams.ibm.compute import PowerSystems
+from diagrams.ibm.storage import ObjectStorage, FileStorage
 
 
 
 # change type of diagram here via json file name i.e. 'ibm-production' or 'ibm-quickstart'
-type = "aws-standard"
+type = "azure-quickstart"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
@@ -40,14 +49,21 @@ ignored = ["ibm-resource-group", "ibm-access-group", "ibm-vpc-gateways", "ibm-lo
 
 # pre-defined nodes for diagrams
 
-icons ={"ibm" : {"worker":PowerSystems, "vpe":VpcEndpoints, 
-        "ingress":Subnets, "bastion":VirtualRouterAppliance, "egress":VirtualRouterAppliance},
+icons ={"ibm" : {"worker":PowerSystems, "vpe":VpcEndpoints, "ingress":Subnets, 
+                "bastion":VirtualRouterAppliance, "egress":VirtualRouterAppliance,
+                "users":PeerCloud, "internet":Cis, "intserv":Cdn, "lb":LocalLoadBalancing},
         
-        "aws" : {"rosa":Redshift, "bastion":EC2, "instance":EC2}}
+        "aws" : {"rosa":Redshift, "bastion":EC2, "instance":EC2, "users":Users,
+                "internet":InternetAlt1, "intserv":ClientVpn, "lb":ALB},
+                
+        "azure":{"worker":Sphere, "master":Sphere, "ingress":Azsubnets, "bastion":VirtualNetworkGateways, "egress":VirtualNetworks, "vpe":RouteTables,
+                "users":Usericon, "internet":SpringCloud, "intserv":ApplicationGateway, "lb":LoadBalancers}  }
 
 platservice = {"ibm-log-analysis":LogAnalysis, "ibm-cloud-monitoring":Monitoring, "ibm-activity-tracker":ActivityTracker, 
                "ibm-object-storage":ObjectStorage, "cos":ObjectStorage, 
-               "aws-kms":KMS}  # dict of cloud services
+               "aws-kms":KMS,
+               "azure-monitoring":AnalysisServices, "azure-logging":LogAnalyticsWorkspaces, "azure-storage":BlobStorage, 
+               "azure-keyvault":KeyVaults, "azure-dnszone":DNSZones}  # dict of cloud services
 
 
 
@@ -59,7 +75,7 @@ def diagram():
     
     with Diagram( show=False, filename='/tmp/diagram'):
         pform = type.split("-", 1)[0]  # get the platform i.e. aws, ibm, azure
-        print(pform)
+
         with Cluster(pform + " Cloud"):
             # have a dict of dependencies, key is the name and val is the list of nodes
             clusters = {"ibm-ocp-vpc": [0, [0]], "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]], 
@@ -100,7 +116,6 @@ def diagram():
                     if name in awsnodes and key == "dependencies":
                         for dep in val:
                             if 'ref' in dep.keys() and dep['ref'] in clusters.keys():
-                                print(dep['ref'])
                                 clusters[dep['ref']][2] = name.rsplit("-", 1)[1]
                     
                     if key == "enrichedMetadata":
@@ -124,7 +139,6 @@ def diagram():
                                     continue
 
 
-            print(clusters)
             nodes = {}
 
             with Cluster(type + " (VPC)"):
@@ -135,10 +149,9 @@ def diagram():
                     for net in range(1, 4):
                         with Cluster("Zone " + str(net)):
                             s = "worker"+str(net)
-                            n = icons["ibm"]["workernode"](s)
+                            n = icons["ibm"]["worker"](s)
                             nodes.update({"worker"+str(net): n})
-                    nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"] \
-                        >> nodes["ibm-log-analysis"]
+                    nodes["worker1"] - Edge(color="red") - nodes["worker2"] - Edge(color="red") - nodes["worker3"]
 
                 else:
                     for key in clusters.keys():
@@ -157,56 +170,60 @@ def diagram():
                                 if net > 1:  # past first zone
                                     nodes[b + str(net - 1)] - Edge(color="red") - n
 
-                    if "worker1" in nodes.keys():
-                        conslink = nodes["worker1"]
-                    elif "ingress1" in nodes.keys():
-                        conslink = nodes["ingress1"]
-                    elif "rosa1" in nodes.keys():
-                        conslink = nodes["rosa1"]
-                    elif "instance1" in nodes.keys():
-                        conslink = nodes["instance1"]
-                    
-                    if "worker3" in nodes.keys():
-                        dirlink = nodes["worker3"]
-                        servlink = nodes["worker3"]
-                    elif "ingress3" in nodes.keys():
-                        dirlink = nodes["ingress3"]
-                        servlink = nodes["ingress3"]
-                    elif "bastion3" in nodes.keys():
-                        dirlink = nodes["bastion3"]
-                        servlink = nodes["bastion3"]
+                if "worker1" in nodes.keys():
+                    conslink = nodes["worker1"]
+                elif "ingress1" in nodes.keys():
+                    conslink = nodes["ingress1"]
+                elif "rosa1" in nodes.keys():
+                    conslink = nodes["rosa1"]
+                elif "instance1" in nodes.keys():
+                    conslink = nodes["instance1"]
+                
+                if "worker3" in nodes.keys():
+                    dirlink = nodes["worker3"]
+                    servlink = nodes["worker3"]
+                elif "ingress3" in nodes.keys():
+                    dirlink = nodes["ingress3"]
+                    servlink = nodes["ingress3"]
+                elif "rosa3" in nodes.keys():
+                    servlink = nodes["rosa3"]
+                elif "bastion3" in nodes.keys():
+                    dirlink = nodes["bastion3"]
+                    servlink = nodes["bastion3"]
 
-                    if "vpe1" in nodes.keys():
-                        emplink = nodes["vpe1"]
-                    elif "ingress1" in nodes.keys():
-                        emplink = nodes["ingress1"]
-                    elif "bastion1" in nodes.keys():
-                        emplink = nodes["bastion1"]
+                if "vpe1" in nodes.keys():
+                    emplink = nodes["vpe1"]
+                elif "ingress1" in nodes.keys():
+                    emplink = nodes["ingress1"]
+                elif "bastion1" in nodes.keys():
+                    emplink = nodes["bastion1"]
 
-        if "edge" not in type:
-            with Cluster("Cloud Services"):
-                services = list(set(services))  # get rid of duplicates
-                if "cos" in services and "ibm-object-storage" in services:
-                    services.remove("cos")
-                for serv in services:
-                    print(serv)
-                    n = platservice[serv](serv)
-                    nodes.update({serv: n})
-                servlink - Edge(color="blue") - nodes[next(iter(services))]
+            if "edge" not in type:
+                with Cluster("Cloud Services"):
+                    services = list(set(services))  # get rid of duplicates
+                    if "cos" in services and "ibm-object-storage" in services:
+                        services.remove("cos")
+                    for serv in services:
+                        n = platservice[serv](serv)
+                        nodes.update({serv: n})
+                    servlink - Edge(color="blue") - nodes[next(iter(services))]
+        
+        
         if 'quickstart' not in type:
             if 'production' in type or 'standard' in type:
                 with Cluster("Consumer"):
-                    user = PeerCloud("Users")
-                    internet = Cis("Internet")
-                user >> internet >> Cdn("Cloud Internet Service") >> LocalLoadBalancing("Private LB") >> conslink
+                    user = icons[pform]["users"]("Users")
+                    internet = icons[pform]["internet"]("Internet")
+                user >> internet >> icons[pform]["intserv"]("Cloud Internet Service") >> icons[pform]["lb"]("Load Balancer") >> conslink
             if 'edge' in type or 'standard' in type:
                 with Cluster("Remote Employee"):
-                    PeerCloud("Remote employee") >> Cis() >> emplink
-                with Cluster("Enterprise Network"):
-                    dir = FileStorage("Enterprise Directory")
-                    PeerCloud("Enterprise User")
-                    Enterprise("Enterprise Application")
-                dirlink >> DirectLink("Direct link") >> dir
+                    icons[pform]["users"]("Remote employee") >> icons[pform]["internet"]("Internet") >> emplink
+                if "aws" not in pform:
+                    with Cluster("Enterprise Network"):
+                        dir = FileStorage("Enterprise Directory")
+                        icons[pform]["users"]("Enterprise User")
+                        Enterprise("Enterprise Application")
+                    dirlink >> DirectLink("Direct link") >> dir
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
 
