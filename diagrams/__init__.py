@@ -44,12 +44,13 @@ class Diagram:
 
     # fmt: off
     _default_graph_attrs = {
+        "labelloc": "t",
         "pad": "1.0",
         "splines": "ortho",
         "nodesep": "0.60",
         "ranksep": "0.75",
         "fontname": "Sans-Serif",
-        "fontsize": "15",
+        "fontsize": "30",
         "fontcolor": "#2D3436",
     }
     _default_node_attrs = {
@@ -65,7 +66,7 @@ class Diagram:
         # "imagepos": "tc",
         "imagescale": "true",
         "fontname": "Sans-Serif",
-        "fontsize": "10",
+        "fontsize": "12",
         "fontcolor": "#2D3436",
     }
     _default_edge_attrs = {

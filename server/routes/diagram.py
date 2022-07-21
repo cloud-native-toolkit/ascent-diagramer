@@ -40,7 +40,7 @@ from diagrams.ibm.storage import ObjectStorage, FileStorage
 
 # change type of diagram here via json file name i.e. 'ibm-production' or 'ibm-quickstart'
 # right now it's important to name file "[platform]-[infratype]" so the type and pform are correct
-type = "aws-quickstart"
+type = "azure-standard"
 with open("./public/"+type+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
@@ -52,7 +52,7 @@ ignored = ["ibm-resource-group", "ibm-access-group", "ibm-vpc-gateways", "ibm-lo
 
 icons ={"ibm" : {"worker":PowerSystems, "vpe":VpcEndpoints, "ingress":Subnets, 
                 "bastion":VirtualRouterAppliance, "egress":VirtualRouterAppliance,
-                "users":PeerCloud, "internet":Cis, "intserv":Cdn, "lb":LocalLoadBalancing},
+                "users":PeerCloud, "internet":Cis, "intserv":Dns, "lb":LocalLoadBalancing},
         
         "aws" : {"rosa":Redshift, "bastion":EC2, "instance":EC2, "users":Users,
                 "internet":InternetAlt1, "intserv":ClientVpn, "lb":ALB},
@@ -63,8 +63,8 @@ icons ={"ibm" : {"worker":PowerSystems, "vpe":VpcEndpoints, "ingress":Subnets,
 platservice = {"ibm-log-analysis":LogAnalysis, "ibm-cloud-monitoring":Monitoring, "ibm-activity-tracker":ActivityTracker, 
                "ibm-object-storage":ObjectStorage, "cos":ObjectStorage, 
                "aws-kms":KMS,
-               "azure-monitoring":AnalysisServices, "azure-logging":LogAnalyticsWorkspaces, "azure-storage":BlobStorage, 
-               "azure-keyvault":KeyVaults, "azure-dnszone":DNSZones}  # dict of cloud services
+               "azure-monitoring":AnalysisServices, "azure-logging":LogAnalyticsWorkspaces, "azure-storage-blob":BlobStorage, 
+               "azure-ssh-key":KeyVaults, "azure-dnszone":DNSZones}  # dict of cloud services
 
 
 
@@ -81,7 +81,8 @@ def diagram():
             # have a dict of dependencies, key is the name and val is the list of nodes
             clusters = {"ibm-ocp-vpc": [0, [0]], "worker-subnets": [0, [0]], "vpe-subnets": [0, [0]], 
                         "ingress-subnets": [0, [0]], "bastion-subnets": [0, [0]], "egress-subnets": [0, [0]],
-                        "aws-vpc": [0, [0]], "pri_subnets": [0, [0], ''], "pub_subnets": [0, [0], '']} 
+                        "aws-vpc": [0, [0]], "pri_subnets": [0, [0], ''], "pub_subnets": [0, [0], ''], 
+                        "master_subnet":[0, [0]], "worker_subnet": [0, [0]]} 
             awsnodes = ["aws-rosa", "aws-ec2-bastion", "aws-ec2-instance"]
             services = []
             # iterate through modules
@@ -139,7 +140,7 @@ def diagram():
                                     services.append(s)
                                     continue
 
-
+            print(clusters)
             nodes = {}
 
             with Cluster(type + " (VPC)"):
@@ -170,9 +171,12 @@ def diagram():
                                     nodes.update({b + str(net): n})
                                 if net > 1:  # past first zone
                                     nodes[b + str(net - 1)] - Edge(color="red") - n
+                print(nodes)
 
+                # establish which node will connect to other clusters
                 if "worker1" in nodes.keys():
                     conslink = nodes["worker1"]
+                    servlink = nodes["worker1"]
                 elif "ingress1" in nodes.keys():
                     conslink = nodes["ingress1"]
                 elif "rosa1" in nodes.keys():
@@ -192,6 +196,8 @@ def diagram():
                     dirlink = nodes["bastion3"]
                     servlink = nodes["bastion3"]
 
+                if "worker1" in nodes.keys():
+                    emplink = nodes["worker1"]
                 if "vpe1" in nodes.keys():
                     emplink = nodes["vpe1"]
                 elif "ingress1" in nodes.keys():
@@ -199,6 +205,8 @@ def diagram():
                 elif "bastion1" in nodes.keys():
                     emplink = nodes["bastion1"]
 
+
+            # place the cloud services cluster and nodes
             if "edge" not in type:
                 with Cluster("Cloud Services"):
                     services = list(set(services))  # get rid of duplicates
@@ -209,7 +217,7 @@ def diagram():
                         nodes.update({serv: n})
                     servlink - Edge(color="blue") - nodes[next(iter(services))]
         
-        
+        # place the consumer/employee/enterprise network clusters
         if 'quickstart' not in type:
             if 'production' in type or 'standard' in type:
                 with Cluster("Consumer"):
@@ -219,7 +227,7 @@ def diagram():
             if 'edge' in type or 'standard' in type:
                 with Cluster("Remote Employee"):
                     icons[pform]["users"]("Remote employee") >> icons[pform]["internet"]("Internet") >> emplink
-                if "aws" not in pform:
+                if "ibm" in pform:
                     with Cluster("Enterprise Network"):
                         dir = FileStorage("Enterprise Directory")
                         icons[pform]["users"]("Enterprise User")

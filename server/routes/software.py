@@ -43,6 +43,9 @@ with open("./public/"+fname+".json", "r") as stream:
     file = (json.load(stream))
 stream.close()
 
+# temp
+icons = [Dns, PowerSystems, VpcEndpoints, Subnets, Cis, Cdn, ObjectStorage,
+        FileStorage, KeyVaults, SpringCloud]
 
 
 @app.route("/software")
@@ -53,8 +56,9 @@ def software():
 
     name = file["bom"]["metadata"]["annotations"]["displayName"]
     with Diagram(name, show=False, filename='/tmp/diagram'):
-        with Cluster("Core Services"):
-            clusters = {}
+        with Cluster("OpenShift cluster"):
+            namespaces = {"global":[]}
+            other = []
             # iterate through modules
             for i in file["bom"]["spec"]["modules"]:
                 d = True
@@ -64,50 +68,74 @@ def software():
                     # for each module, get the name and dependencies
                     if key == "name":
                         name = val
-                    if key == "alias":
-                        name = val
-
+                        if "namespace" in name:
+                            break
+                        continue
+                    # if key == "alias":
+                    #     name = val  # get the more specific name
+                    #     continue
+                   
                     if key == "dependencies":
                         d = False
                         # loop through each dependency
                         for dep in val:
                             s = str(val[0]["ref"])
-                            if s in clusters.keys():
-                                clusters[s].append(name)
+                            if s in namespaces.keys():
+                                namespaces[s].append(name) # add the curr val to the list of things in the namespace
                             else:
-                                clusters[s] = [name]
+                                namespaces[s] = [name]
+                        break
+                    
+                    namespaces["global"].append(name)
+                    break
+                    # things that belong in namespaces dont have this/it doesnt matter
+                    # if key == "enrichedMetadata":
+                    #     if d and key == "enrichedMetadata":
+                    #         # loop through each dependency
+                    #         for dep in val["dependencies"]:
+                    #             s = str(dep["id"])
+                    #             if s in namespaces.keys():
+                    #                 namespaces[s].append(name)
+                    #             else:
+                    #                 namespaces[s] = [name]
 
-                    if key == "enrichedMetadata":
-                        if d and key == "enrichedMetadata":
-                            # loop through each dependency
-                            for dep in val["dependencies"]:
-                                s = str(dep["id"])
-                                if s in clusters.keys():
-                                    clusters[s].append(name)
-                                else:
-                                    clusters[s] = [name]
-
-        # create new cluster for each key
-        for clust in clusters.keys():
-            makeClusters(clusters, clust)
+            # create new cluster for each key
+            j = 0
+            newlist = []
+            for clust in namespaces.keys():
+                nodes = makeClusters(namespaces, clust, j)
+                j += 1
+                newlist.append(nodes[0])
+                print(nodes)
+            for i in range(0,len(newlist) - 1):
+                newlist[i] - Edge(color="red") - newlist[i + 1]
+            
+            
+            # nodes[5] - Edge(color="red") - nodes[6] - \
+            #     Edge(color='red') - nodes["gitops-cp-queue-manager"]
+            # nodes["gitops-cp-apic"] - Edge(color="red") - nodes["gitops-cp-event-streams"] - \
+            #     Edge(color='red') - nodes["gitops-cp-platform-navigator"]
 
     return send_file('/tmp/diagram.png', mimetype='image/png')
 
 
 
-def makeClusters(clusters, clust):
+def makeClusters(namespaces, clust, j):
     nodes = []
     with Cluster(clust):
         # include each node that belongs in the cluster
-        for node in clusters[clust]:
-            # if there are nested clusters, find those first
-            if (node in clusters.keys()):
+        for node in namespaces[clust]:
+            # if there are nested namespaces, find those first
+            if (node in namespaces.keys()):
                 # want to go to that cluster and get its nodes first
-                makeClusters(clusters, node)
-                clusters[node] = []
+                makeClusters(namespaces, node, 0)
+                namespaces[node] = []
             else:
-                newnode = Sphere(node)
+                if len(node) > 13:
+                    node = node.rsplit('-', 1)
+                    node = node[0] + '\n' + node[1]
+                newnode = icons[j](node)
                 nodes.append(newnode)
     for i in range(0,len(nodes) - 1):
         nodes[i] - Edge(color="blue") - nodes[i + 1]
-    return 1
+    return nodes

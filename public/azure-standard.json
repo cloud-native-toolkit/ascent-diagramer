@@ -1,0 +1,2687 @@
+{
+    "bom": {
+        "apiVersion": "cloud.ibm.com/v1alpha1",
+        "kind": "BillOfMaterial",
+        "metadata": {
+            "name": "101-azure-vnet-base",
+            "labels": {
+                "type": "infrastructure",
+                "platform": "azure",
+                "code": "101"
+            },
+            "annotations": {
+                "displayName": "Azure VNet",
+                "description": "Azure base infrastructure for OpenShift standard architecture"
+            }
+        },
+        "spec": {
+            "modules": [
+                {
+                    "name": "azure-resource-group",
+                    "version": "1.1.0",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "manualResolution": true,
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the resource group",
+                                "alias": "name",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the resource group should be created",
+                                "default": true
+                            },
+                            {
+                                "name": "sync",
+                                "type": "string",
+                                "description": "Value used to order the provisioning of the resource group",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "sync",
+                                    "output": "sync"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the resource group will be provisioned",
+                                "scope": "global"
+                            }
+                        ],
+                        "version": "v1.1.0",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the resource group"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the resource group"
+                            },
+                            {
+                                "name": "group",
+                                "description": "The resource group object"
+                            },
+                            {
+                                "name": "provision",
+                                "description": "Flag indicating whether the resource group was provisioned"
+                            },
+                            {
+                                "name": "sync",
+                                "description": "Value used to order the provisioning of the resource group"
+                            },
+                            {
+                                "name": "region"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vnet",
+                    "version": "1.1.1",
+                    "variables": [
+                        {
+                            "name": "address_prefixes",
+                            "value": [
+                                "10.0.0.0/16"
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the IBM Cloud resource group where the VPC instance will be created.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "default": "",
+                                "scope": "module"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "The name of the vpc resource",
+                                "default": "",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the instance should be provisioned. If false then an existing instance will be looked up",
+                                "default": true
+                            },
+                            {
+                                "name": "address_prefix_count",
+                                "type": "number",
+                                "description": "The number of ipv4_cidr_blocks",
+                                "default": "0"
+                            },
+                            {
+                                "name": "address_prefixes",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the address prefixes (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "base_security_group_name",
+                                "type": "string",
+                                "description": "The name of the base security group. If not provided the name will be based on the vpc name",
+                                "default": ""
+                            },
+                            {
+                                "name": "internal_cidr",
+                                "type": "string",
+                                "description": "The cidr range of the internal network",
+                                "default": "10.0.0.0/8"
+                            }
+                        ],
+                        "version": "v1.1.1",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "The name of the VNet instance"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The id of the VNet instance"
+                            },
+                            {
+                                "name": "crn",
+                                "description": "The CRN for the VNet instance"
+                            },
+                            {
+                                "name": "count",
+                                "description": "The number of VPCs created by this module. Always set to 1"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The name of the vpc instance"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The id of the vnet instance"
+                            },
+                            {
+                                "name": "addresses",
+                                "description": "The ip address ranges for the VNet"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vnet-subnets",
+                    "alias": "master_subnet",
+                    "version": "1.3.3",
+                    "default": true,
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": true
+                        },
+                        {
+                            "name": "_count",
+                            "value": 1
+                        },
+                        {
+                            "name": "label",
+                            "value": "master"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.0.0.0/24"
+                            ]
+                        },
+                        {
+                            "name": "acl_rules",
+                            "value": [
+                                {
+                                    "name": "api-inbound",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "6443",
+                                        "source_port_range": "*"
+                                    }
+                                },
+                                {
+                                    "name": "bootstrap-inbound",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "22623",
+                                        "source_port_range": "*"
+                                    }
+                                },
+                                {
+                                    "name": "bootstrap-ssh",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "22",
+                                        "source_port_range": "*"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The name of the subnet instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "0"
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the NSG should be provisioned.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n    name=string,\n    action=string,\n    direction=string,\n    source=string,\n    destination=string,\n    priority=optional(number),\n    tcp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    udp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    icmp=optional(object({\n      type=number,\n      code=optional(number)\n    })),\n  }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "service_endpoints",
+                                "type": "list(string)",
+                                "description": "The list of service endpoints for the subnet",
+                                "default": [
+                                    "Microsoft.ContainerRegistry"
+                                ]
+                            },
+                            {
+                                "name": "disable_private_link_endpoint_network_policies",
+                                "type": "bool",
+                                "description": "Flag to disable private link endpoint network policies in the subnet.",
+                                "default": false
+                            }
+                        ],
+                        "version": "v1.3.4",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "name"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network security group for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "cidr_blocks",
+                                "description": "The cidr block(s) assigned to the subnets"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vnet-subnets",
+                    "alias": "worker_subnet",
+                    "version": "1.3.3",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": true
+                        },
+                        {
+                            "name": "_count",
+                            "value": 1
+                        },
+                        {
+                            "name": "label",
+                            "value": "worker"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.0.1.0/24"
+                            ]
+                        },
+                        {
+                            "name": "acl_rules",
+                            "value": [
+                                {
+                                    "name": "https-80-inbound",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "80",
+                                        "source_port_range": "*"
+                                    }
+                                },
+                                {
+                                    "name": "https-443-inbound",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "443",
+                                        "source_port_range": "*"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The name of the subnet instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "0"
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the NSG should be provisioned.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n    name=string,\n    action=string,\n    direction=string,\n    source=string,\n    destination=string,\n    priority=optional(number),\n    tcp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    udp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    icmp=optional(object({\n      type=number,\n      code=optional(number)\n    })),\n  }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "service_endpoints",
+                                "type": "list(string)",
+                                "description": "The list of service endpoints for the subnet",
+                                "default": [
+                                    "Microsoft.ContainerRegistry"
+                                ]
+                            },
+                            {
+                                "name": "disable_private_link_endpoint_network_policies",
+                                "type": "bool",
+                                "description": "Flag to disable private link endpoint network policies in the subnet.",
+                                "default": false
+                            }
+                        ],
+                        "version": "v1.3.4",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "name"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network security group for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "cidr_blocks",
+                                "description": "The cidr block(s) assigned to the subnets"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vnet-subnets",
+                    "alias": "ingress_subnet",
+                    "version": "1.3.3",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": true
+                        },
+                        {
+                            "name": "_count",
+                            "value": 1
+                        },
+                        {
+                            "name": "label",
+                            "value": "ingress"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.0.2.0/24"
+                            ]
+                        },
+                        {
+                            "name": "acl_rules",
+                            "value": [
+                                {
+                                    "name": "Allow all",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "*",
+                                        "source_port_range": "*"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The name of the subnet instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "0"
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the NSG should be provisioned.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n    name=string,\n    action=string,\n    direction=string,\n    source=string,\n    destination=string,\n    priority=optional(number),\n    tcp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    udp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    icmp=optional(object({\n      type=number,\n      code=optional(number)\n    })),\n  }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "service_endpoints",
+                                "type": "list(string)",
+                                "description": "The list of service endpoints for the subnet",
+                                "default": [
+                                    "Microsoft.ContainerRegistry"
+                                ]
+                            },
+                            {
+                                "name": "disable_private_link_endpoint_network_policies",
+                                "type": "bool",
+                                "description": "Flag to disable private link endpoint network policies in the subnet.",
+                                "default": false
+                            }
+                        ],
+                        "version": "v1.3.4",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "name"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network security group for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "cidr_blocks",
+                                "description": "The cidr block(s) assigned to the subnets"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vnet-subnets",
+                    "alias": "bastion_subnet",
+                    "version": "1.3.3",
+                    "variables": [
+                        {
+                            "name": "provision",
+                            "value": true
+                        },
+                        {
+                            "name": "_count",
+                            "value": 1
+                        },
+                        {
+                            "name": "label",
+                            "value": "bastion"
+                        },
+                        {
+                            "name": "ipv4_cidr_blocks",
+                            "value": [
+                                "10.0.2.0/24"
+                            ]
+                        },
+                        {
+                            "name": "acl_rules",
+                            "value": [
+                                {
+                                    "name": "Allow all",
+                                    "action": "Allow",
+                                    "direction": "Inbound",
+                                    "source": "*",
+                                    "destination": "*",
+                                    "tcp": {
+                                        "destination_port_range": "*",
+                                        "source_port_range": "*"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The IBM Cloud region where the cluster will be/has been installed.",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "type": "string",
+                                "description": "The name of the vpc instance",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The name of the subnet instance",
+                                "default": ""
+                            },
+                            {
+                                "name": "label",
+                                "type": "string",
+                                "description": "Label for the subnets created",
+                                "default": "default"
+                            },
+                            {
+                                "name": "_count",
+                                "type": "number",
+                                "description": "The number of subnets that should be provisioned",
+                                "default": "0"
+                            },
+                            {
+                                "name": "ipv4_cidr_blocks",
+                                "type": "list(string)",
+                                "description": "List of ipv4 cidr blocks for the subnets that will be created (e.g. ['10.10.10.0/24']). If you are providing cidr blocks then a value must be provided for each of the subnets. If you don't provide cidr blocks for each of the subnets then values will be generated using the {ipv4_address_count} value.",
+                                "default": []
+                            },
+                            {
+                                "name": "provision",
+                                "type": "bool",
+                                "description": "Flag indicating that the NSG should be provisioned.",
+                                "default": true
+                            },
+                            {
+                                "name": "acl_rules",
+                                "type": "list(object({\n    name=string,\n    action=string,\n    direction=string,\n    source=string,\n    destination=string,\n    priority=optional(number),\n    tcp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    udp=optional(object({\n      destination_port_range=string,\n      source_port_range=string\n    })),\n    icmp=optional(object({\n      type=number,\n      code=optional(number)\n    })),\n  }))",
+                                "description": "List of rules to set on the subnet access control list",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "service_endpoints",
+                                "type": "list(string)",
+                                "description": "The list of service endpoints for the subnet",
+                                "default": [
+                                    "Microsoft.ContainerRegistry"
+                                ]
+                            },
+                            {
+                                "name": "disable_private_link_endpoint_network_policies",
+                                "type": "bool",
+                                "description": "Flag to disable private link endpoint network policies in the subnet.",
+                                "default": false
+                            }
+                        ],
+                        "version": "v1.3.4",
+                        "outputs": [
+                            {
+                                "name": "count",
+                                "description": "The number of subnets created"
+                            },
+                            {
+                                "name": "name"
+                            },
+                            {
+                                "name": "ids",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "id",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "names",
+                                "description": "The ids of the created subnets"
+                            },
+                            {
+                                "name": "subnets",
+                                "description": "The subnets that were created"
+                            },
+                            {
+                                "name": "acl_id",
+                                "description": "The id of the network security group for the subnets"
+                            },
+                            {
+                                "name": "vpc_name",
+                                "description": "The name of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "vpc_id",
+                                "description": "The id of the VPC where the subnets were provisioned"
+                            },
+                            {
+                                "name": "cidr_blocks",
+                                "description": "The cidr block(s) assigned to the subnets"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-lb",
+                    "version": "1.2.6",
+                    "alias": "internal_lb",
+                    "dependencies": [
+                        {
+                            "name": "subnets",
+                            "ref": "master_subnet"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "name_prefix",
+                            "value": "internal-lb"
+                        },
+                        {
+                            "name": "lb_rules",
+                            "value": [
+                                {
+                                    "name": "internal-lb-api-rule",
+                                    "protocol": "Tcp",
+                                    "probe_name": "internal-lb-api-probe",
+                                    "frontend_port": 6443,
+                                    "backend_port": 6443,
+                                    "idle_timeout": 30,
+                                    "load_distribution": "Default",
+                                    "enable_floating_point": false
+                                },
+                                {
+                                    "name": "internal-lb-sint-rule",
+                                    "protocol": "Tcp",
+                                    "probe_name": "internal-lb-sint-probe",
+                                    "frontend_port": 22623,
+                                    "backend_port": 22623,
+                                    "idle_timeout": 30,
+                                    "load_distribution": "Default",
+                                    "enable_floating_point": false
+                                }
+                            ]
+                        },
+                        {
+                            "name": "lb_probes",
+                            "value": [
+                                {
+                                    "name": "internal-lb-api-probe",
+                                    "interval": 5,
+                                    "no_probes": 2,
+                                    "port": 6443,
+                                    "request_path": "/readyz",
+                                    "protocol": "Https"
+                                },
+                                {
+                                    "name": "internal-lb-sint-probe",
+                                    "interval": 5,
+                                    "no_probes": 2,
+                                    "port": 22623,
+                                    "request_path": "/readyz",
+                                    "protocol": "Https"
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "virtual_network",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.1.1"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the load balancer will be installed",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "public",
+                                "type": "bool",
+                                "description": "Flag to indicate whether a public IP is required",
+                                "default": false
+                            },
+                            {
+                                "name": "create_fqdn",
+                                "type": "bool",
+                                "description": "Create a FQDN from the name prefix as a subddomain of Azure (<name_prefix>.<region>.cloudapp.azure.com)",
+                                "default": true
+                            },
+                            {
+                                "name": "use_ipv4",
+                                "type": "bool",
+                                "description": "Support IPv4",
+                                "default": true
+                            },
+                            {
+                                "name": "use_ipv6",
+                                "type": "bool",
+                                "description": "Support IPv6",
+                                "default": false
+                            },
+                            {
+                                "name": "outbound_rule",
+                                "type": "bool",
+                                "description": "Flag to indicate whether an outbound rule is required for a public load balancer",
+                                "default": false
+                            },
+                            {
+                                "name": "outbound_protocol",
+                                "type": "string",
+                                "description": "Protocol for the outbound rule for a public load balancer",
+                                "default": "All"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix for the name of the load balancer to be created"
+                            },
+                            {
+                                "name": "subnet_id",
+                                "type": "string",
+                                "description": "The subnet id to attach the load balancer frontend if private",
+                                "default": "null",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "ids[0]"
+                                }
+                            },
+                            {
+                                "name": "subnet_cidr_v6",
+                                "type": "string",
+                                "description": "Subnet CIDR from which to allocate a public IPv6 address",
+                                "default": ""
+                            },
+                            {
+                                "name": "lb_sku",
+                                "type": "string",
+                                "description": "Azure Load Balancer SKU type - Basic, Standard or Gateway",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "private_ip_allocation",
+                                "type": "string",
+                                "description": "Private IP address allocation method - Static or Dynamic",
+                                "default": "Dynamic"
+                            },
+                            {
+                                "name": "public_ip_allocation",
+                                "type": "string",
+                                "description": "Public IP address allocation method - Static or Dynamic",
+                                "default": "Static"
+                            },
+                            {
+                                "name": "dns_label",
+                                "type": "string",
+                                "description": "DNS label for public IP",
+                                "default": "null"
+                            },
+                            {
+                                "name": "public_ip_sku",
+                                "type": "string",
+                                "description": "Public IP SKU - Basic or Standard",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "public_ip_name_v4",
+                                "type": "string",
+                                "description": "Public IP V4 Name",
+                                "default": ""
+                            },
+                            {
+                                "name": "public_ip_name_v6",
+                                "type": "string",
+                                "description": "Public IP V6 Name",
+                                "default": ""
+                            },
+                            {
+                                "name": "lb_rules",
+                                "type": "list(object({\n        name=string,\n        protocol=string,\n        probe_name=string,\n        frontend_port=number,\n        backend_port=number,\n        load_distribution=string,\n        idle_timeout=number,\n        enable_floating_point=bool\n    }))",
+                                "description": "List of the load balancer rules to be created",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "lb_probes",
+                                "type": "list(object({\n        name=string,\n        interval=number,\n        no_probes=number,\n        port=number,\n        request_path=string,\n        protocol=string\n    }))",
+                                "description": "List of probes to be created",
+                                "default": "[]"
+                            }
+                        ],
+                        "version": "v1.2.8",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Name of the load balancer created"
+                            },
+                            {
+                                "name": "id",
+                                "description": "Created load balancer identification"
+                            },
+                            {
+                                "name": "internal_ip_address_v4",
+                                "description": "Internal IP (IPv4) of the created load balancer (only for non-public load balancer) "
+                            },
+                            {
+                                "name": "internal_ip_address_v6",
+                                "description": "Internal IP (IPv6) of the created load balancer (only for non-public load balancer) "
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Resource group load balancer was created in"
+                            },
+                            {
+                                "name": "region",
+                                "description": "Region where load balancer was created"
+                            },
+                            {
+                                "name": "platform",
+                                "description": "Platform for load balancer"
+                            },
+                            {
+                                "name": "backend_address_id_v4",
+                                "description": "Id of the backend IPv4 address pool created"
+                            },
+                            {
+                                "name": "backend_address_id_v6",
+                                "description": "Id of the backend IPv6 address pool created"
+                            },
+                            {
+                                "name": "public_ip_address_v4",
+                                "description": "Public IP (IPv4) allocated to the load balancer"
+                            },
+                            {
+                                "name": "public_ip_address_v6",
+                                "description": "Public IP (IPv6) allocated to the load balancer"
+                            },
+                            {
+                                "name": "public_fqdn_v4",
+                                "description": "FQDN allocated to IPv4 public IP address"
+                            },
+                            {
+                                "name": "public_fqdn_v6",
+                                "description": "FQDN allocated to IPv6 public IP address"
+                            },
+                            {
+                                "name": "backend_pool_id_v4",
+                                "description": "Backend pool ID for IPv4"
+                            },
+                            {
+                                "name": "backend_pool_id_v6",
+                                "description": "Backend pool ID for IPv6"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-lb",
+                    "version": "1.2.6",
+                    "alias": "public-lb",
+                    "dependencies": [
+                        {
+                            "name": "subnets",
+                            "ref": "master_subnet"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "public",
+                            "value": true
+                        },
+                        {
+                            "name": "outbound_rule",
+                            "value": true
+                        },
+                        {
+                            "name": "name_prefix",
+                            "value": "public-lb"
+                        },
+                        {
+                            "name": "lb_probes",
+                            "value": [
+                                {
+                                    "name": "public-lb-api-probe",
+                                    "interval": 5,
+                                    "no_probes": 2,
+                                    "port": 6443,
+                                    "request_path": "/readyz",
+                                    "protocol": "Https"
+                                },
+                                {
+                                    "name": "public-lb-apps-443-probe",
+                                    "interval": 5,
+                                    "no_probes": 2,
+                                    "port": 443,
+                                    "request_path": "/readyz",
+                                    "protocol": "Https"
+                                },
+                                {
+                                    "name": "public-lb-apps-80-probe",
+                                    "interval": 5,
+                                    "no_probes": 2,
+                                    "port": 80,
+                                    "request_path": "/readyz",
+                                    "protocol": "Https"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "lb_rules",
+                            "value": [
+                                {
+                                    "name": "public-lb-api-rule",
+                                    "protocol": "Tcp",
+                                    "probe_name": "public-lb-api-probe",
+                                    "frontend_port": 6443,
+                                    "backend_port": 6443,
+                                    "idle_timeout": 30,
+                                    "load_distribution": "Default",
+                                    "enable_floating_point": false
+                                },
+                                {
+                                    "name": "public-lb-apps-443-rule",
+                                    "protocol": "Tcp",
+                                    "probe_name": "public-lb-apps-443-probe",
+                                    "frontend_port": 443,
+                                    "backend_port": 443,
+                                    "idle_timeout": 30,
+                                    "load_distribution": "Default",
+                                    "enable_floating_point": false
+                                },
+                                {
+                                    "name": "public-lb-apps-80-rule",
+                                    "protocol": "Tcp",
+                                    "probe_name": "public-lb-apps-80-probe",
+                                    "frontend_port": 80,
+                                    "backend_port": 80,
+                                    "idle_timeout": 30,
+                                    "load_distribution": "Default",
+                                    "enable_floating_point": false
+                                }
+                            ]
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.1.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "virtual_network",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.1.1"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnets",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the load balancer will be installed",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "public",
+                                "type": "bool",
+                                "description": "Flag to indicate whether a public IP is required",
+                                "default": false
+                            },
+                            {
+                                "name": "create_fqdn",
+                                "type": "bool",
+                                "description": "Create a FQDN from the name prefix as a subddomain of Azure (<name_prefix>.<region>.cloudapp.azure.com)",
+                                "default": true
+                            },
+                            {
+                                "name": "use_ipv4",
+                                "type": "bool",
+                                "description": "Support IPv4",
+                                "default": true
+                            },
+                            {
+                                "name": "use_ipv6",
+                                "type": "bool",
+                                "description": "Support IPv6",
+                                "default": false
+                            },
+                            {
+                                "name": "outbound_rule",
+                                "type": "bool",
+                                "description": "Flag to indicate whether an outbound rule is required for a public load balancer",
+                                "default": false
+                            },
+                            {
+                                "name": "outbound_protocol",
+                                "type": "string",
+                                "description": "Protocol for the outbound rule for a public load balancer",
+                                "default": "All"
+                            },
+                            {
+                                "name": "name_prefix",
+                                "type": "string",
+                                "description": "Prefix for the name of the load balancer to be created"
+                            },
+                            {
+                                "name": "subnet_id",
+                                "type": "string",
+                                "description": "The subnet id to attach the load balancer frontend if private",
+                                "default": "null",
+                                "moduleRef": {
+                                    "id": "subnets",
+                                    "output": "ids[0]"
+                                }
+                            },
+                            {
+                                "name": "subnet_cidr_v6",
+                                "type": "string",
+                                "description": "Subnet CIDR from which to allocate a public IPv6 address",
+                                "default": ""
+                            },
+                            {
+                                "name": "lb_sku",
+                                "type": "string",
+                                "description": "Azure Load Balancer SKU type - Basic, Standard or Gateway",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "private_ip_allocation",
+                                "type": "string",
+                                "description": "Private IP address allocation method - Static or Dynamic",
+                                "default": "Dynamic"
+                            },
+                            {
+                                "name": "public_ip_allocation",
+                                "type": "string",
+                                "description": "Public IP address allocation method - Static or Dynamic",
+                                "default": "Static"
+                            },
+                            {
+                                "name": "dns_label",
+                                "type": "string",
+                                "description": "DNS label for public IP",
+                                "default": "null"
+                            },
+                            {
+                                "name": "public_ip_sku",
+                                "type": "string",
+                                "description": "Public IP SKU - Basic or Standard",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "public_ip_name_v4",
+                                "type": "string",
+                                "description": "Public IP V4 Name",
+                                "default": ""
+                            },
+                            {
+                                "name": "public_ip_name_v6",
+                                "type": "string",
+                                "description": "Public IP V6 Name",
+                                "default": ""
+                            },
+                            {
+                                "name": "lb_rules",
+                                "type": "list(object({\n        name=string,\n        protocol=string,\n        probe_name=string,\n        frontend_port=number,\n        backend_port=number,\n        load_distribution=string,\n        idle_timeout=number,\n        enable_floating_point=bool\n    }))",
+                                "description": "List of the load balancer rules to be created",
+                                "default": "[]"
+                            },
+                            {
+                                "name": "lb_probes",
+                                "type": "list(object({\n        name=string,\n        interval=number,\n        no_probes=number,\n        port=number,\n        request_path=string,\n        protocol=string\n    }))",
+                                "description": "List of probes to be created",
+                                "default": "[]"
+                            }
+                        ],
+                        "version": "v1.2.8",
+                        "outputs": [
+                            {
+                                "name": "name",
+                                "description": "Name of the load balancer created"
+                            },
+                            {
+                                "name": "id",
+                                "description": "Created load balancer identification"
+                            },
+                            {
+                                "name": "internal_ip_address_v4",
+                                "description": "Internal IP (IPv4) of the created load balancer (only for non-public load balancer) "
+                            },
+                            {
+                                "name": "internal_ip_address_v6",
+                                "description": "Internal IP (IPv6) of the created load balancer (only for non-public load balancer) "
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Resource group load balancer was created in"
+                            },
+                            {
+                                "name": "region",
+                                "description": "Region where load balancer was created"
+                            },
+                            {
+                                "name": "platform",
+                                "description": "Platform for load balancer"
+                            },
+                            {
+                                "name": "backend_address_id_v4",
+                                "description": "Id of the backend IPv4 address pool created"
+                            },
+                            {
+                                "name": "backend_address_id_v6",
+                                "description": "Id of the backend IPv6 address pool created"
+                            },
+                            {
+                                "name": "public_ip_address_v4",
+                                "description": "Public IP (IPv4) allocated to the load balancer"
+                            },
+                            {
+                                "name": "public_ip_address_v6",
+                                "description": "Public IP (IPv6) allocated to the load balancer"
+                            },
+                            {
+                                "name": "public_fqdn_v4",
+                                "description": "FQDN allocated to IPv4 public IP address"
+                            },
+                            {
+                                "name": "public_fqdn_v6",
+                                "description": "FQDN allocated to IPv6 public IP address"
+                            },
+                            {
+                                "name": "backend_pool_id_v4",
+                                "description": "Backend pool ID for IPv4"
+                            },
+                            {
+                                "name": "backend_pool_id_v6",
+                                "description": "Backend pool ID for IPv6"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-vm-bastion",
+                    "version": "1.0.0",
+                    "alias": "vm-bastion-1",
+                    "dependencies": [
+                        {
+                            "name": "subnet",
+                            "ref": "bastion_subnet"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "bastion_host_name",
+                            "value": "vm-bastion-1"
+                        },
+                        {
+                            "name": "ip_configuration_name",
+                            "value": "bastion-1-ip-config"
+                        },
+                        {
+                            "name": "public_ip_name",
+                            "value": "bastion-1-pip"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the bastion host has been provisioned",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the bastion host will be installed",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "virtual_network_name",
+                                "type": "string",
+                                "description": "The Azure virtual network name",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_id",
+                                "type": "string",
+                                "description": "The Azure subnet id",
+                                "moduleRef": {
+                                    "id": "subnet",
+                                    "output": "ids"
+                                }
+                            },
+                            {
+                                "name": "ip_configuration_name",
+                                "type": "string",
+                                "description": "The Azure ip configuration name which is used in vm bastion host"
+                            },
+                            {
+                                "name": "bastion_host_name",
+                                "type": "string",
+                                "description": "This is the name of Azure bastion host name"
+                            },
+                            {
+                                "name": "public_ip_name",
+                                "type": "string",
+                                "description": "A Public IP Address name which should be associated with the bastion host resource."
+                            },
+                            {
+                                "name": "public_ip_allocation_method",
+                                "type": "string",
+                                "description": "Public IP address allocation method - Static or Dynamic",
+                                "default": "Static"
+                            },
+                            {
+                                "name": "public_ip_sku",
+                                "type": "string",
+                                "description": "The SKU which should be used. At this time the only supported value is Standard. Defaults to Standard.",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "public_ip_zones",
+                                "type": "list(string)",
+                                "description": "Specifies a list of public ip zones in which this bastion host should be located.",
+                                "default": [
+                                    "1"
+                                ]
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The bastion host subnet name",
+                                "default": "AzureBastionSubnet"
+                            }
+                        ],
+                        "version": "v1.0.0",
+                        "outputs": []
+                    }
+                },
+                {
+                    "name": "azure-vm-bastion",
+                    "version": "1.0.0",
+                    "alias": "vm-bastion-2",
+                    "dependencies": [
+                        {
+                            "name": "subnet",
+                            "ref": "bastion_subnet"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "bastion_host_name",
+                            "value": "vm-bastion-2"
+                        },
+                        {
+                            "name": "ip_configuration_name",
+                            "value": "bastion-2-ip-config"
+                        },
+                        {
+                            "name": "public_ip_name",
+                            "value": "bastion-2-pip"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the bastion host has been provisioned",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the bastion host will be installed",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "virtual_network_name",
+                                "type": "string",
+                                "description": "The Azure virtual network name",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_id",
+                                "type": "string",
+                                "description": "The Azure subnet id",
+                                "moduleRef": {
+                                    "id": "subnet",
+                                    "output": "ids"
+                                }
+                            },
+                            {
+                                "name": "ip_configuration_name",
+                                "type": "string",
+                                "description": "The Azure ip configuration name which is used in vm bastion host"
+                            },
+                            {
+                                "name": "bastion_host_name",
+                                "type": "string",
+                                "description": "This is the name of Azure bastion host name"
+                            },
+                            {
+                                "name": "public_ip_name",
+                                "type": "string",
+                                "description": "A Public IP Address name which should be associated with the bastion host resource."
+                            },
+                            {
+                                "name": "public_ip_allocation_method",
+                                "type": "string",
+                                "description": "Public IP address allocation method - Static or Dynamic",
+                                "default": "Static"
+                            },
+                            {
+                                "name": "public_ip_sku",
+                                "type": "string",
+                                "description": "The SKU which should be used. At this time the only supported value is Standard. Defaults to Standard.",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "public_ip_zones",
+                                "type": "list(string)",
+                                "description": "Specifies a list of public ip zones in which this bastion host should be located.",
+                                "default": [
+                                    "1"
+                                ]
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "The bastion host subnet name",
+                                "default": "AzureBastionSubnet"
+                            }
+                        ],
+                        "version": "v1.0.0",
+                        "outputs": []
+                    }
+                },
+                {
+                    "name": "azure-vpn-gateway",
+                    "version": "1.0.0",
+                    "alias": "vpn-gateway",
+                    "dependencies": [
+                        {
+                            "name": "subnet",
+                            "ref": "ingress_subnet"
+                        }
+                    ],
+                    "variables": [
+                        {
+                            "name": "vpn_gateway_name",
+                            "value": "ingress_vpn"
+                        },
+                        {
+                            "name": "public_ip_name",
+                            "value": "ingress_vpn_pip"
+                        },
+                        {
+                            "name": "vpn_ip_configuration_name",
+                            "value": "ingress_vpn_ip_config"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vnet",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "subnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "Name of the Azure resource group where the VPN Gateway has been provisioned.",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "Location/region to keep all your network resources",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "virtual_network_name",
+                                "type": "string",
+                                "description": "Name of the virtual network",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "subnet_name",
+                                "type": "string",
+                                "description": "It is mandatory that the associated subnet is named GatewaySubnet",
+                                "default": "GatewaySubnet"
+                            },
+                            {
+                                "name": "subnet_id",
+                                "type": "string",
+                                "description": "The Azure subnet id",
+                                "moduleRef": {
+                                    "id": "subnet",
+                                    "output": "ids"
+                                }
+                            },
+                            {
+                                "name": "public_ip_name",
+                                "type": "string",
+                                "description": "It provide the Public IP for the VPN Gateway"
+                            },
+                            {
+                                "name": "public_ip_allocation_method",
+                                "type": "string",
+                                "description": "Defines the allocation method for this IP address. Possible values are Static or Dynamic. Defaults is Dynamic",
+                                "default": "Dynamic"
+                            },
+                            {
+                                "name": "vpn_gateway_name",
+                                "type": "string",
+                                "description": "Name of the Virtual Network Gateway"
+                            },
+                            {
+                                "name": "gateway_type",
+                                "type": "string",
+                                "description": "The type of the Virtual Network Gateway. Options are Vpn or ExpressRoute",
+                                "default": "Vpn"
+                            },
+                            {
+                                "name": "vpn_type",
+                                "type": "string",
+                                "description": "The routing type of the Virtual Network Gateway. Options are RouteBased or PolicyBased. Defaults is RouteBased",
+                                "default": "RouteBased"
+                            },
+                            {
+                                "name": "enable_active_active",
+                                "type": "bool",
+                                "description": "An active-active Virtual Network Gateway will be created, if - true. And it requires a HighPerformance or an UltraPerformance sku. An active-standby gateway will be created, if - false. Defaults to false.",
+                                "default": false
+                            },
+                            {
+                                "name": "enable_bgp",
+                                "type": "bool",
+                                "description": "BGP (Border Gateway Protocol) will be enabled if - True for this Virtual Network Gateway. Defaults to false",
+                                "default": false
+                            },
+                            {
+                                "name": "vpn_gw_sku",
+                                "type": "string",
+                                "description": "Size and capacity of the virtual network gateway. Options are Basic, VpnGw1, VpnGw2",
+                                "default": "Basic"
+                            },
+                            {
+                                "name": "vpn_ip_configuration_name",
+                                "type": "string",
+                                "description": "Virtual network gateway IP Configuration name details"
+                            },
+                            {
+                                "name": "private_ip_address_allocation_method",
+                                "type": "string",
+                                "description": "Defines the allocation method for this IP address. Values are Static or Dynamic. Defaults is Dynamic",
+                                "default": "Dynamic"
+                            }
+                        ],
+                        "version": "v1.0.0",
+                        "outputs": [
+                            {
+                                "name": "vpn_gateway_name",
+                                "description": "Name of the Azure VPN Gateway created"
+                            },
+                            {
+                                "name": "vpn_gateway_public_ip",
+                                "description": "The Public IP of the Virtual Network Gateway."
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-ssh-key",
+                    "version": "1.0.3",
+                    "alias": "ssh-key",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">=1.0.0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "key_name",
+                                "description": "Name to give to SSH key",
+                                "type": "string"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "value",
+                                "default": "\"\"",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "description": "Location to store key",
+                                "default": "\"\"",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "store_path",
+                                "description": "Path to directory in which to store keys (will default to current working directory)",
+                                "type": "string",
+                                "default": ""
+                            },
+                            {
+                                "name": "file_permissions",
+                                "description": "Permissions to be set on created files (default = 0600)",
+                                "type": "string",
+                                "default": "0600"
+                            },
+                            {
+                                "name": "store_key_in_vault",
+                                "description": "Flag to storage the generated or supplied key in the Azure vault",
+                                "type": "bool",
+                                "default": true
+                            },
+                            {
+                                "name": "ssh_key",
+                                "description": "Path to existing public key to be used. Will be created if empty. (Default empty string)",
+                                "type": "string",
+                                "default": ""
+                            },
+                            {
+                                "name": "algorithm",
+                                "description": "Algorithim to be utilized if creating a new key (RSA, ECDSA or ED25519, default = RSA)",
+                                "type": "string",
+                                "default": "RSA"
+                            },
+                            {
+                                "name": "rsa_bits",
+                                "description": "Number of bits to use for RSA key (default = 4096)",
+                                "type": "number",
+                                "default": "4096"
+                            },
+                            {
+                                "name": "ecdsa_curve",
+                                "description": "ECDSA Curve value to be utilized for ECDSA key (P224, P256, P521, default = P224)",
+                                "type": "string",
+                                "default": "P224"
+                            },
+                            {
+                                "name": "tags",
+                                "description": "Extra tags to be added to the Azure Vault entry (default = none)",
+                                "type": "map(string)",
+                                "default": "{}"
+                            }
+                        ],
+                        "version": "v1.0.3",
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "Azure vault identification of the stored key"
+                            },
+                            {
+                                "name": "pub_key",
+                                "description": "Public key"
+                            },
+                            {
+                                "name": "pub_key_file",
+                                "description": "File location of public key"
+                            },
+                            {
+                                "name": "path",
+                                "description": "Path to where keys are stored in filesystem"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-storage-blob",
+                    "version": "1.1.1",
+                    "alias": "storage",
+                    "enrichedMetadata": {
+                        "platforms": [],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "resource_group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.0"
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "sync",
+                                "refs": [],
+                                "interface": "github.com/cloud-native-toolkit/automation-modules#sync",
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "resource_group_name",
+                                "type": "string",
+                                "description": "The name of the Azure resource group where the VPC has been provisioned",
+                                "moduleRef": {
+                                    "id": "resource_group",
+                                    "output": "name"
+                                }
+                            },
+                            {
+                                "name": "region",
+                                "type": "string",
+                                "description": "The Azure location where the load balancer will be installed",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "storage_account_name",
+                                "type": "string",
+                                "description": "The name of the Azure Storage Account"
+                            },
+                            {
+                                "name": "storage_account_tier",
+                                "type": "string",
+                                "description": "The Tier of the Azure Storage Account",
+                                "default": "Standard"
+                            },
+                            {
+                                "name": "replication_type",
+                                "type": "string",
+                                "description": "The type of the Replication for Azure Storage Account",
+                                "default": "LRS"
+                            },
+                            {
+                                "name": "container_name",
+                                "type": "string",
+                                "description": "The name of the Azure Blob Storage Container",
+                                "default": ""
+                            },
+                            {
+                                "name": "container_access_type",
+                                "type": "string",
+                                "description": "The type of access for Azure Storage Container",
+                                "default": "private"
+                            },
+                            {
+                                "name": "blob_file_name",
+                                "type": "string",
+                                "description": "The name of the Blob File",
+                                "default": ""
+                            },
+                            {
+                                "name": "blob_file_type",
+                                "type": "string",
+                                "description": "The type of Blob for File",
+                                "default": "Block"
+                            },
+                            {
+                                "name": "blob_file_sourcefile_name",
+                                "type": "string",
+                                "description": "The name of the Source file",
+                                "default": ""
+                            }
+                        ],
+                        "version": "v1.1.1",
+                        "outputs": [
+                            {
+                                "name": "storage_blob_id",
+                                "description": "The id of the Azure Storage Blob File"
+                            },
+                            {
+                                "name": "storage_blob_url",
+                                "description": "The URL of the Azure Storage Blob File"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "azure-ocp-ipi",
+                    "version": "1.2.2",
+                    "dependencies": [
+                        {
+                            "name": "master-subnet",
+                            "ref": "master_subnet"
+                        },
+                        {
+                            "name": "worker-subnet",
+                            "ref": "worker_subnet"
+                        },
+                        {
+                            "name": "vnet_name",
+                            "ref": "azure-vnet"
+                        },
+                        {
+                            "name": "network_resource_group_name",
+                            "ref": "azure-resource-group"
+                        }
+                    ],
+                    "enrichedMetadata": {
+                        "platforms": [
+                            "ocp4"
+                        ],
+                        "providers": [
+                            {
+                                "name": "azurerm",
+                                "source": "hashicorp/azurerm"
+                            }
+                        ],
+                        "dependencies": [
+                            {
+                                "id": "network-resource-group",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-resource-group",
+                                        "version": ">= 1.0.3"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "vnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-vpc",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "master-subnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "worker-subnet",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-subnets",
+                                        "version": ">= 1.3.0"
+                                    }
+                                ],
+                                "optional": true
+                            },
+                            {
+                                "id": "ssh-key",
+                                "refs": [
+                                    {
+                                        "source": "github.com/cloud-native-toolkit/terraform-azure-ssh-key",
+                                        "version": ">= 1.0.2"
+                                    }
+                                ],
+                                "optional": true
+                            }
+                        ],
+                        "variables": [
+                            {
+                                "name": "name_prefix",
+                                "description": "OpenShift Cluster Prefix",
+                                "type": "string",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "domain_resource_group_name",
+                                "description": "Resource group name containing the base domain name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "base_domain",
+                                "description": "Base domain name (e.g. myclusters.mydomain.com)",
+                                "type": "string",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "region",
+                                "description": "Azure region into which to deploy",
+                                "type": "string",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "subscription_id",
+                                "type": "string",
+                                "description": "Subscription into which to deploy OpenShift and containing the existing resource group",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "client_id",
+                                "type": "string",
+                                "description": "The client id (service principal appID) to be used for OpenShift",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "client_secret",
+                                "type": "string",
+                                "description": "The client secret (e.g. service principal password) to be used for OpenShift",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "tenant_id",
+                                "type": "string",
+                                "description": "Tenant id containing the subscription",
+                                "scope": "global"
+                            },
+                            {
+                                "name": "pull_secret",
+                                "description": "Pull secret for OpenShift image repository access and to register the cluster",
+                                "type": "string",
+                                "default": ""
+                            },
+                            {
+                                "name": "pull_secret_file",
+                                "description": "File with the pull secret for OpenShift image repository access and to register the cluster",
+                                "type": "string",
+                                "default": ""
+                            },
+                            {
+                                "name": "binary_offset",
+                                "description": "Path offset from current working directory to install binaries (default = binaries)",
+                                "type": "string",
+                                "default": "binaries"
+                            },
+                            {
+                                "name": "install_offset",
+                                "description": "Path offset from current working directory for install metadata (default = install)",
+                                "type": "string",
+                                "default": "install"
+                            },
+                            {
+                                "name": "openshift_ssh_key",
+                                "description": "The SSH Public Key to use for OpenShift Installation",
+                                "type": "string",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "ssh-key",
+                                    "output": "pub_key"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "vnet_name",
+                                "description": "VNet name to deploy into if using existing VNet",
+                                "type": "string",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "vnet",
+                                    "output": "name"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "master_subnet_name",
+                                "description": "Name of the master subnet",
+                                "type": "string",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "master-subnet",
+                                    "output": "name"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "worker_subnet_name",
+                                "description": "Name of the worker subnet",
+                                "type": "string",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "worker-subnet",
+                                    "output": "name"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "openshift_version",
+                                "description": "OpenShift version to install",
+                                "type": "string",
+                                "default": "4.10.11"
+                            },
+                            {
+                                "name": "binary_url_base",
+                                "description": "Base URL for OpenShift installer and CLI binaries",
+                                "type": "string",
+                                "default": "https://mirror.openshift.com/pub/openshift-v4"
+                            },
+                            {
+                                "name": "network_resource_group_name",
+                                "description": "Name of the resource group for the network components (must be different to the overall resource group)",
+                                "type": "string",
+                                "default": "",
+                                "moduleRef": {
+                                    "id": "network-resource-group",
+                                    "output": "name"
+                                },
+                                "optional": true
+                            },
+                            {
+                                "name": "master_hyperthreading",
+                                "description": "Enable hyperthreading for master nodes (default = enabled)",
+                                "type": "string",
+                                "default": "Enabled"
+                            },
+                            {
+                                "name": "master_architecture",
+                                "description": "CPU Architecture for the master nodes (default = amd64)",
+                                "type": "string",
+                                "default": "amd64"
+                            },
+                            {
+                                "name": "master_node_disk_size",
+                                "description": "Size of master node disk in GB (default = 120)",
+                                "type": "string",
+                                "default": "120"
+                            },
+                            {
+                                "name": "master_node_disk_type",
+                                "description": "Type of disk for the master nodes (default = Premium_LRS)",
+                                "type": "string",
+                                "default": "Premium_LRS"
+                            },
+                            {
+                                "name": "master_node_type",
+                                "description": "Master node type (defualt = Standard_D2s_v3)",
+                                "type": "string",
+                                "default": "Standard_D8s_v3"
+                            },
+                            {
+                                "name": "master_node_qty",
+                                "description": "Number of master nodes to create (default = 3)",
+                                "type": "string",
+                                "default": "3"
+                            },
+                            {
+                                "name": "worker_hyperthreading",
+                                "description": "Enable hyperthreading for compute/worker nodes (default = enabled)",
+                                "type": "string",
+                                "default": "Enabled"
+                            },
+                            {
+                                "name": "worker_architecture",
+                                "description": "CPU Architecture for the worker nodes (default = amd64)",
+                                "type": "string",
+                                "default": "amd64"
+                            },
+                            {
+                                "name": "worker_node_type",
+                                "description": "Compute/worker node type (default = Standard_D2s_v3)",
+                                "type": "string",
+                                "default": "Standard_D4s_v3"
+                            },
+                            {
+                                "name": "worker_node_disk_size",
+                                "description": "Compute/worker node disk size in GB (default = 120)",
+                                "type": "string",
+                                "default": "120"
+                            },
+                            {
+                                "name": "worker_node_disk_type",
+                                "description": "Type of disk for the worker nodes (default = Premium_LRS)",
+                                "type": "string",
+                                "default": "Premium_LRS"
+                            },
+                            {
+                                "name": "worker_node_qty",
+                                "description": "Number of compute/worker nodes to create (default = 3)",
+                                "type": "string",
+                                "default": "3"
+                            },
+                            {
+                                "name": "cluster_cidr",
+                                "description": "CIDR for the internal OpenShift network (default = 10.128.0.0/14)",
+                                "type": "string",
+                                "default": "10.128.0.0/14"
+                            },
+                            {
+                                "name": "cluster_host_prefix",
+                                "description": "Host prefix for internal OpenShift network (default = 23)",
+                                "type": "string",
+                                "default": "23"
+                            },
+                            {
+                                "name": "machine_cidr",
+                                "description": "CIDR for master and compute nodes (default = 10.0.0.0/16)",
+                                "type": "string",
+                                "default": "10.0.0.0/16"
+                            },
+                            {
+                                "name": "network_type",
+                                "description": "Network plugin to use (default = OpenShiftSDN)",
+                                "type": "string",
+                                "default": "OpenShiftSDN"
+                            },
+                            {
+                                "name": "service_network_cidr",
+                                "description": "CIDR for the internal OpenShift service network (default = 172.30.0.0/16)",
+                                "type": "string",
+                                "default": "172.30.0.0/16"
+                            },
+                            {
+                                "name": "outbound_type",
+                                "description": "The type of outbound routing to use. Loadbalancer (default) or UserDefinedRouting",
+                                "type": "string",
+                                "default": "Loadbalancer"
+                            },
+                            {
+                                "name": "enable_fips",
+                                "description": "Enable FIPS in the cluster (default = false)",
+                                "type": "string",
+                                "default": "false"
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "name": "id",
+                                "description": "ID of the created cluster"
+                            },
+                            {
+                                "name": "name",
+                                "description": "Name of the cluster"
+                            },
+                            {
+                                "name": "resource_group_name",
+                                "description": "Name of the resource group containing the cluster"
+                            },
+                            {
+                                "name": "region",
+                                "description": "Azure location containing the cluster"
+                            },
+                            {
+                                "name": "config_file_path",
+                                "description": "Path to the config file for the cluster"
+                            },
+                            {
+                                "name": "consoleURL",
+                                "description": "URL for the cluster console"
+                            },
+                            {
+                                "name": "server_url",
+                                "description": "The url used to connect to the api of the cluster"
+                            },
+                            {
+                                "name": "username",
+                                "description": "Username for the cluster"
+                            },
+                            {
+                                "name": "password",
+                                "description": "Password for the cluster",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "token",
+                                "description": "The admin user token used to generate the cluster",
+                                "sensitive": true
+                            },
+                            {
+                                "name": "bin_dir",
+                                "description": "Path to the client binaries"
+                            },
+                            {
+                                "name": "platform",
+                                "type": {
+                                    "lines": [
+                                        "local.cluster_type"
+                                    ]
+                                },
+                                "sensitive": true,
+                                "description": "Configuration values for the created cluster platform"
+                            }
+                        ],
+                        "version": "v1.2.2"
+                    }
+                }
+            ]
+        }
+    }
+}
