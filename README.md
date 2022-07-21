@@ -28,21 +28,7 @@ This application also enables a starting place for a Python microservice using F
 
 ## Steps
 
-You can [deploy this application to IBM Cloud](https://cloud.ibm.com/developer/appservice/starter-kits/python-flask-app) or [build it locally](#building-locally) by cloning this repo first. After your app is live, you can access the `/health` endpoint to build out your cloud native application.
-
-### Deploying to IBM Cloud
-
-**Deprecated**: IBM® Cloud Foundry is deprecated. For more information, see [Deprecation of IBM Cloud Foundry](http://ibm.biz/ibmcf-announce).
-
-<p align="center">
-    <a href="https://cloud.ibm.com/developer/appservice/starter-kits/python-flask-app">
-    <img src="https://cloud.ibm.com/devops/setup/deploy/button_x2.png" alt="Deploy to IBM Cloud">
-    </a>
-</p>
-
-Click **Deploy to IBM Cloud** to deploy this same application to IBM Cloud. This option creates a deployment pipeline, complete with a hosted GitLab project and a DevOps toolchain. You can deploy your app to Cloud Foundry, a Kubernetes cluster, or a Red Hat OpenShift cluster. OpenShift is available only through a standard cluster, which requires you to have a billable account.
-
-[IBM Cloud DevOps](https://www.ibm.com/cloud/devops) services provides toolchains as a set of tool integrations that support development, deployment, and operations tasks inside IBM Cloud.
+You can [build this application locally](#building-locally) by cloning this repo first. After your app is live, you can access the `/health` endpoint to build out your cloud native application.
 
 ### Building locally
 
@@ -81,9 +67,10 @@ There are also a few utility commands:
 * `test`: runs all unit tests inside of the project's `test` directory
 
 Your application is running at: `http://localhost:3000/` in your browser.
-- Your [Swagger UI](http://swagger.io/swagger-ui/) is running on: `/explorer`
-- Your Swagger definition is running on: `/swagger/api`
+- Your Swagger definition is running on: `/swagger/api-docs`
 - Health endpoint: `/health`
+- Infrastructure diagram endpoint: `/diagram`
+- Software diagram endpoint: `/software`
 
 There are two different options for debugging a Flask project:
 1. Run `python manage.py runserver` to start a native Flask development server. This comes with the Werkzeug stack-trace debugger, which will present runtime failure stack-traces in-browser with the ability to inspect objects at any point in the trace. For more information, see [Werkzeug documentation](http://werkzeug.pocoo.org/).
