@@ -44,8 +44,8 @@ with open("./public/"+fname+".json", "r") as stream:
 stream.close()
 
 # temp
-icons = [Dns, PowerSystems, VpcEndpoints, Subnets, Cis, Cdn, ObjectStorage,
-        FileStorage, KeyVaults, SpringCloud]
+namespaceicon = VpcEndpoints
+globalicon = PowerSystems
 
 
 @app.route("/software")
@@ -134,7 +134,10 @@ def makeClusters(namespaces, clust, j):
                 if len(node) > 13:
                     node = node.rsplit('-', 1)
                     node = node[0] + '\n' + node[1]
-                newnode = icons[j](node)
+                if clust == "global":
+                    newnode = globalicon(node)
+                else:
+                    newnode = namespaceicon(node)
                 nodes.append(newnode)
     for i in range(0,len(nodes) - 1):
         nodes[i] - Edge(color="blue") - nodes[i + 1]

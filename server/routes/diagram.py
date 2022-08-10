@@ -30,7 +30,7 @@ from diagrams.azure.iot import Sphere
 from diagrams.azure.network import LoadBalancers, ApplicationGateway, Subnets as Azsubnets, VirtualNetworks, VirtualNetworkGateways, RouteTables, DNSZones
 from diagrams.azure.security import KeyVaults
 
-from diagrams.ibm.compute import PowerSystems
+from diagrams.ibm.container import Openshift
 from diagrams.ibm.general import *
 from diagrams.ibm.logging import *
 from diagrams.ibm.network import *
@@ -50,7 +50,7 @@ ignored = ["ibm-resource-group", "ibm-access-group", "ibm-vpc-gateways", "ibm-lo
 
 # pre-defined nodes for diagrams
 
-icons ={"ibm" : {"worker":PowerSystems, "vpe":VpcEndpoints, "ingress":Subnets, 
+icons ={"ibm" : {"worker":Openshift, "vpe":VpcEndpoints, "ingress":Subnets, 
                 "bastion":VirtualRouterAppliance, "egress":VirtualRouterAppliance,
                 "users":PeerCloud, "internet":Cis, "intserv":Dns, "lb":LocalLoadBalancing},
         
@@ -140,7 +140,6 @@ def diagram():
                                     services.append(s)
                                     continue
 
-            print(clusters)
             nodes = {}
 
             with Cluster(type + " (VPC)"):
@@ -171,7 +170,6 @@ def diagram():
                                     nodes.update({b + str(net): n})
                                 if net > 1:  # past first zone
                                     nodes[b + str(net - 1)] - Edge(color="red") - n
-                print(nodes)
 
                 # establish which node will connect to other clusters
                 if "worker1" in nodes.keys():
