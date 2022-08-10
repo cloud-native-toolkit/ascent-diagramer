@@ -62,8 +62,7 @@ To run your application locally, run this inside the virtualenv:
 python manage.py start
 ```
 
-To change the diagram type, see the top of the code with comments labeled "HOW TO RUN:"
-Right now, the program can only create diagrams from the .jsons in the /public folder. The naming must be: platform-type, i.e., ibm-standard, or aws-quickstart.
+#### To change the diagram type, see the top of the code with comments labeled "HOW TO RUN:" Right now, the program can only create diagrams from the .jsons in the /public folder. The naming must be: platform-type, i.e., ibm-standard, or aws-quickstart.
 
 
 `manage.py` offers a variety of different run commands to match the proper situation:
