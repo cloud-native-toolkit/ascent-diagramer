@@ -37,6 +37,12 @@ To get started building this application locally, you can either run the applica
 #### Native application development
 
 * Install [Python](https://www.python.org/downloads/)
+
+Make sure you have graphviz installed:
+
+```bash
+brew install graphviz
+```
  
 Running Flask applications has been simplified with a `manage.py` file to avoid dealing with configuring environment variables to run your app. From your project root, you can download the project dependencies with (NOTE: If you don't have pipenv installed, execute: `pip install pipenv`):
 
@@ -55,6 +61,10 @@ To run your application locally, run this inside the virtualenv:
 ```bash
 python manage.py start
 ```
+
+To change the diagram type, see the top of the code with comments labeled "HOW TO RUN:"
+Right now, the program can only create diagrams from the .jsons in the /public folder. The naming must be: platform-type, i.e., ibm-standard, or aws-quickstart.
+
 
 `manage.py` offers a variety of different run commands to match the proper situation:
 * `start`: starts a server in a production setting using `gunicorn`.

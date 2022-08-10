@@ -37,7 +37,7 @@ from diagrams.ibm.network import *
 from diagrams.ibm.storage import ObjectStorage, FileStorage
 
 
-
+# HOW TO RUN:
 # change type of diagram here via json file name i.e. 'ibm-production' or 'ibm-quickstart'
 # right now it's important to name file "[platform]-[infratype]" so the type and pform are correct
 type = "azure-standard"
