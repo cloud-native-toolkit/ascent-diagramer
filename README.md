@@ -51,6 +51,9 @@ You can also verify the state of your locally running application using the Sele
 
 > **Note for Windows users:** `gunicorn` is not supported on Windows. You may start the server with `python manage.py run` on your local machine or build and start the Dockerfile.
 
+## Other Notes
+This project creates a python web service that uses https://pypi.org/project/diagrams/ library to perform the heavy lifting of rendering the JSON formatted version of a BOM.yaml using graphviz and returning the output as a png.
+
 ## License
 
 This sample application is licensed under the Apache License, Version 2. Separate third-party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1](https://developercertificate.org/) and the [Apache License, Version 2](https://www.apache.org/licenses/LICENSE-2.0.txt).
