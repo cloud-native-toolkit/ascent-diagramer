@@ -8,7 +8,8 @@ To get started building this application locally, you can either run the applica
 
 ### Native application development
 
-* Install [Python](https://www.python.org/downloads/)
+* Install [Python](https://www.python.org/downloads/) (NOTE: If python3 is installed in your environment, substite pip3 for pip below)
+* Install Graphviz (Mac OS: `brew install graphviz`)
  
 Running Flask applications has been simplified with a `manage.py` file to avoid dealing with configuring environment variables to run your app. From your project root, you can download the project dependencies with (NOTE: If you don't have pipenv installed, execute: `pip install pipenv`):
 
@@ -50,6 +51,9 @@ There are two different options for debugging a Flask project:
 You can also verify the state of your locally running application using the Selenium UI test script included in the `scripts` directory.
 
 > **Note for Windows users:** `gunicorn` is not supported on Windows. You may start the server with `python manage.py run` on your local machine or build and start the Dockerfile.
+
+## Limitations
+Currently, a default bom.yaml is rendered from `/public/bom.yaml`, and there is not an upload capability or ability to specify an alternative location for the input bom. To render other bom's, place the bom.yaml in /public and change the file name in routes/diagram.py from "bom.yaml" to your new file name.
 
 ## License
 
